@@ -2,6 +2,7 @@ package com.example.freelacetelegrambot.config;
 
 
 import com.example.freelacetelegrambot.bot.TelegramFreelanceBot;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -17,5 +18,10 @@ public class ApplicationConfig {
         var api = new TelegramBotsApi(DefaultBotSession.class);
         api.registerBot(telegramFreelanceBot);
         return api;
+    }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
     }
 }

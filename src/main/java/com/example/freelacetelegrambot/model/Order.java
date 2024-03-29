@@ -1,12 +1,59 @@
 package com.example.freelacetelegrambot.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.example.freelacetelegrambot.enums.Category;
+import com.example.freelacetelegrambot.enums.Status;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class Order {
+
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private long id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "order_addrress")
+    private String orderAddress;
+
+    @ManyToOne
+    @JoinColumn(name = "customer", referencedColumnName = "id")
+    private User customer;
+
+    @ManyToOne
+    @JoinColumn(name = "executor", referencedColumnName = "id")
+    private User executor;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    @Column(name = "price")
+    private Double price;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "category")
+    private Category category;
 }
