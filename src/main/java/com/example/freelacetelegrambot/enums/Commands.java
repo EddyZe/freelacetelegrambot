@@ -5,6 +5,14 @@ public enum Commands {
     EXECUTOR("Я исполнитель"),
     CUSTOMER("Я заказчик"),
     CANCEL("Отмена"),
+    GO_BACK_ROLE("Вернуться к выбору"),
+    CREATE_TASK("Создать задание"),
+    MY_CREATED_TASKS("Мои задания"),
+
+    MY_COMMENTS("Мои отзывы"),
+    SEARCH_EXECUTOR("Поиск исполнителя"),
+    SEARCH_TASK("Поиск задач"),
+    SETTING("Настройки профиля"),
     REGISTRATION("Регистрация");
 
     private final String cmd;

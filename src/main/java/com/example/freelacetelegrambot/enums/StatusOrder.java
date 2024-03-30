@@ -1,6 +1,6 @@
 package com.example.freelacetelegrambot.enums;
 
-public enum Status {
+public enum StatusOrder {
     OPEN,
     CLOSE,
     IN_EXECUTION

@@ -3,7 +3,9 @@ package com.example.freelacetelegrambot.comand;
 
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
+import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
+import com.example.freelacetelegrambot.exception.UserNotValidException;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -32,9 +34,19 @@ public class RegistrationCommand {
                 if (!text.matches(email))
                     return "Не коректный email. Попробуйте снова.";
                 userSingUpDTO.setEmail(text);
-                userController.registration(userSingUpDTO);
-                return "Вы прошли регистрацию. Для того, чтобы пользоваться сервисом," +
-                        " нужно подтвердить email. Мы отправили вам письмо";
+                try {
+                    userController.registration(userSingUpDTO);
+                    userSingUpDTO.setState(State.BASIK);
+                    return userSingUpDTO.getRole() == Role.CUSTOMER ?
+                            "Вы прошли регистрацию. Для того, чтобы пользоваться сервисом," +
+                            " нужно подтвердить email. Мы отправили вам письмо" :
+
+                            "Вы прошли регистрацию. Для того, чтобы пользоваться сервисом," +
+                            " нужно подтвердить email. Мы отправили вам письмо. " +
+                            "Настройте профиль в разделе 'Настройки профиля', чтобы заказчику было легче вас найти";
+                } catch (UserNotValidException e) {
+                    return e.getMessage();
+                }
             }
             default -> {
                 return "Что-то пошло не так!";

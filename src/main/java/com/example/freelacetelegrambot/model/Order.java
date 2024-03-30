@@ -2,12 +2,9 @@ package com.example.freelacetelegrambot.model;
 
 
 import com.example.freelacetelegrambot.enums.Category;
-import com.example.freelacetelegrambot.enums.Status;
+import com.example.freelacetelegrambot.enums.StatusOrder;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -19,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class Order {
 
 
@@ -33,7 +31,7 @@ public class Order {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_addrress")
+    @Column(name = "order_address")
     private String orderAddress;
 
     @ManyToOne
@@ -46,7 +44,7 @@ public class Order {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private StatusOrder status;
 
     @Column(name = "price")
     private Double price;

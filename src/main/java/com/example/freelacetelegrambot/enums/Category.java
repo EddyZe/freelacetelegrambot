@@ -1,6 +1,7 @@
 package com.example.freelacetelegrambot.enums;
 
 public enum Category {
+    COURIER,
     COURIER_WALKING,
     COURIER_AUTO,
     COURIER_BUY_AND_DELIVER,

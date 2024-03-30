@@ -1,12 +1,9 @@
 package com.example.freelacetelegrambot.controller;
 
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
-import com.example.freelacetelegrambot.exception.UserNotValidException;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.service.UserService;
-import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 
 import java.util.Optional;
 

@@ -2,9 +2,7 @@ package com.example.freelacetelegrambot.service;
 
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.State;
-import com.example.freelacetelegrambot.exception.UserNotFoundException;
 import com.example.freelacetelegrambot.exception.UserNotValidException;
-import com.example.freelacetelegrambot.model.Comment;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.repository.CommentRepository;
 import com.example.freelacetelegrambot.repository.UserRepository;
