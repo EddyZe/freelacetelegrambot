@@ -3,6 +3,7 @@ package com.example.freelacetelegrambot.service;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.State;
 import com.example.freelacetelegrambot.exception.UserNotFoundException;
+import com.example.freelacetelegrambot.exception.UserNotValidException;
 import com.example.freelacetelegrambot.model.Comment;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.repository.CommentRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -30,28 +32,20 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User findByChatId(long chatId) {
-        return userRepository.findByChatId(chatId).orElseThrow(() ->
-                new UserNotFoundException("Заказчик не найден или не зарегистрирован"));
+    public Optional<User> findByChatId(long chatId) {
+        return userRepository.findByChatId(chatId);
     }
 
     public void registration (UserSingUpDTO userSingUpDTO) {
-//        if (bindingResult.hasErrors()) {
-//            StringBuilder errorsMessage = new StringBuilder();
-//
-//            bindingResult.getFieldErrors().forEach(fieldError -> errorsMessage
-//                    .append(fieldError.getField())
-//                    .append(" - ")
-//                    .append(fieldError.getDefaultMessage())
-//                    .append(";\n"));
-//
-//            throw new UserNotValidException(errorsMessage.toString());
-//        }
-
-
+        if (userRepository.findByEmail(userSingUpDTO.getEmail()).isPresent())
+            throw new UserNotValidException("Такой email занят! Повторите попытку");
         User user = convertToCustomer(userSingUpDTO);
-        user.setState(State.BASIK);
+        user.setState(State.BASIK); //TODO Изменить на NON_ACTIVE и настроить mailService
         user.setCreatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    public void save(User user) {
         userRepository.save(user);
     }
 
