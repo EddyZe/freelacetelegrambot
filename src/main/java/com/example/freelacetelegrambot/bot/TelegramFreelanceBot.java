@@ -24,7 +24,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -96,11 +95,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                         inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierCreateOrder());
                 return;
             }
-            StringBuilder response = new StringBuilder("Выберите подкатегории, в которых нужно искать." +
-                    " Так же будут показаны задания из ваших избранных категорий." +
-                    " Выбранные категории будут автоматически добавлены в избранные.\n" +
-                    "После того как сделаете выбор, нажмите кнопку икать.\n\n" +
-                    "Выбранные категории: \n");
+            StringBuilder response = new StringBuilder("""
+                    Выберите подкатегории, в которых нужно искать. Так же будут показаны задания из ваших избранных категорий. Выбранные категории будут автоматически добавлены в избранные.
+                    После того как сделаете выбор, нажмите кнопку икать.
+
+                    Выбранные категории:\s
+                    """);
 
             user.getLikeCategories().forEach(category ->
                     response.append("-")
@@ -121,6 +121,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_AUTO, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -137,6 +138,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_BUY_AND_DELIVER, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -153,6 +155,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_FOOD_DELIVERY, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -168,6 +171,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_WALKING, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -183,6 +187,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_OTHER_DELIVERY, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -198,6 +203,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 return;
             }
 
+            assert user != null;
             addCategoryInSearchList(user, Category.COURIER_URGENT_DELIVERY, selectCategory);
             editMessage(message, chatId, selectCategory.toString(),
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
@@ -282,9 +288,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                             keyboardInitializer.initKeyBoardCustomer());
                     return;
                 }
-                showOrderOrTaskCommand.showOrdersCustomer(orders).forEach(order -> {
-                    sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderCustomer());
-                });
+                showOrderOrTaskCommand.showOrdersCustomer(orders).forEach(order ->
+                        sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderCustomer()));
             } case EXECUTOR -> {
                 List<Order> orders= orderController.findByExecutorChatId(chatId);
                 if (orders.isEmpty()) {
@@ -292,9 +297,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                             keyboardInitializer.initKeyBoardExecutor());
                     return;
                 }
-                showOrderOrTaskCommand.showTasksExecutor(orders).forEach(order -> {
-                    sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderExecutor());
-                });
+                showOrderOrTaskCommand.showTasksExecutor(orders).forEach(order ->
+                        sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderExecutor()));
             }
         }
     }
