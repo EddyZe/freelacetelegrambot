@@ -1,5 +1,6 @@
 package com.example.freelacetelegrambot.repository;
 
+import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.model.Order;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerChatId(Long chatId);
     List<Order> findByExecutorChatId(Long chatId);
 
-
+    List<Order> findByCategory(Category category);
 
 }

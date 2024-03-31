@@ -1,12 +1,14 @@
 package com.example.freelacetelegrambot.service;
 
 
+import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.exception.OrderNotFoundException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -36,5 +38,16 @@ public class OrderService {
 
     public void createTask(Order order) {
         orderRepository.save(order);
+    }
+
+    public void deleteById(long id) {
+        Optional<Order> order = orderRepository.findById(id);
+        if (order.isEmpty())
+            throw new OrderNotFoundException("Заказ с таким id не найден");
+        orderRepository.deleteById(id);
+    }
+
+    public List<Order> findByCategory(Category category) {
+        return orderRepository.findByCategory(category);
     }
 }

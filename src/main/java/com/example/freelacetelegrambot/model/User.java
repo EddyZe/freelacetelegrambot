@@ -1,5 +1,6 @@
 package com.example.freelacetelegrambot.model;
 
+import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
 import jakarta.persistence.*;
@@ -10,7 +11,7 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -47,6 +48,9 @@ public class User {
 
     @OneToMany(mappedBy = "customer")
     private List<Order> orders;
+
+    @Column(name = "like_category")
+    private List<Category> likeCategories = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

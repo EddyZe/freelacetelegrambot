@@ -38,9 +38,12 @@ public class InlineKeyboardInitializer {
 
     public InlineKeyboardMarkup initInlineKeyboardShowMyOrderExecutor() {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        var messageCustomer = createButton("Отправить сообщение заказчику", InlineKeyButton.MESSAGE_CUSTOMER);
-        var doneButton = createButton("Поставить статус: 'Выполнено'", InlineKeyButton.DONE);
-        var rejectionButton = createButton("Отказаться от задания", InlineKeyButton.REJECTION);
+        var messageCustomer = createButton("Отправить сообщение заказчику",
+                InlineKeyButton.MESSAGE_CUSTOMER);
+        var doneButton = createButton("Поставить статус: 'Выполнено'",
+                InlineKeyButton.DONE);
+        var rejectionButton = createButton("Отказаться от задания",
+                InlineKeyButton.REJECTION);
         List<List<InlineKeyboardButton>> rowInLine =
                 createListButton(messageCustomer, doneButton, rejectionButton);
 
@@ -67,7 +70,7 @@ public class InlineKeyboardInitializer {
         return inlineKeyboardMarkup;
     }
 
-    public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourier() {
+    public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourierCreateOrder() {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         var courierCategoryWalking = createButton("Пеший курьер", Category.COURIER_WALKING);
@@ -81,6 +84,36 @@ public class InlineKeyboardInitializer {
                 createListButton(courierCategoryWalking, courierCategoryAuto, courierCategoryBuyAndDelivery,
                         courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery);
 
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourierSearchTasks() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var courierCategoryWalking = createButton("Пеший курьер", Category.COURIER_WALKING);
+        var courierCategoryAuto = createButton("Курьер на авто", Category.COURIER_AUTO);
+        var courierCategoryBuyAndDelivery = createButton("Купить и доставить", Category.COURIER_BUY_AND_DELIVER);
+        var courierCategoryFoodDelivery = createButton("Доставка еды", Category.COURIER_FOOD_DELIVERY);
+        var courierCategoryUrgentDelivery = createButton("Срочная доставка", Category.COURIER_URGENT_DELIVERY);
+        var courierCategoryOtherDelivery = createButton("Разное", Category.COURIER_OTHER_DELIVERY);
+        var courierCategorySearch = createButton("Искать", Category.SEARCH_IN_CATEGORY);
+
+        List<List<InlineKeyboardButton>> rowsInLine =
+                createListButton(courierCategoryWalking, courierCategoryAuto, courierCategoryBuyAndDelivery,
+                        courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery,
+                        courierCategorySearch);
+
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyBoardSearchTask() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var respondButton = createButton("Откликнуться", InlineKeyButton.RESPOND);
+
+        List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton);
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
         return inlineKeyboardMarkup;
     }
