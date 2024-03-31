@@ -31,4 +31,8 @@ public class OrderController {
     public void createTask(Order order) {
         orderService.createTask(order);
     }
+
+    public Order findById(long id) {
+        return orderService.findById(id);
+    }
 }

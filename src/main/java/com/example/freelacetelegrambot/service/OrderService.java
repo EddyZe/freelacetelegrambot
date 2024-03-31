@@ -1,6 +1,7 @@
 package com.example.freelacetelegrambot.service;
 
 
+import com.example.freelacetelegrambot.exception.OrderNotFoundException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,11 @@ public class OrderService {
 
     public List<Order> findAll() {
         return orderRepository.findAll();
+    }
+
+    public Order findById(long id) {
+        return orderRepository.findById(id).orElseThrow(() ->
+                new OrderNotFoundException("Заказ с таким id не найден"));
     }
 
     public void createTask(Order order) {

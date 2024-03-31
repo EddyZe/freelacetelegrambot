@@ -28,4 +28,8 @@ public class UserController {
     public Optional<User> findByChatId(long chatId) {
         return userService.findByChatId(chatId);
     }
+
+    public Optional<User> findByEmail(String email) {
+        return userService.findByEmail(email);
+    }
 }

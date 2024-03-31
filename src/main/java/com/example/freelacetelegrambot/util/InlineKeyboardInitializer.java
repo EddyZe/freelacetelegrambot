@@ -1,6 +1,7 @@
 package com.example.freelacetelegrambot.util;
 
 import com.example.freelacetelegrambot.enums.Category;
+import com.example.freelacetelegrambot.enums.InlineKeyButton;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -26,13 +27,44 @@ public class InlineKeyboardInitializer {
         return inlineKeyboardMarkup;
     }
 
-    private static InlineKeyboardButton createButton(String text, Category category) {
+    private static InlineKeyboardButton createButton(String text, Enum<?> idButton) {
         var courierCategory = new InlineKeyboardButton();
 
         courierCategory.setText(text);
-        courierCategory.setCallbackData(category.name());
+        courierCategory.setCallbackData(idButton.name());
 
         return courierCategory;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyboardShowMyOrderExecutor() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        var messageCustomer = createButton("Отправить сообщение заказчику", InlineKeyButton.MESSAGE_CUSTOMER);
+        var doneButton = createButton("Поставить статус: 'Выполнено'", InlineKeyButton.DONE);
+        var rejectionButton = createButton("Отказаться от задания", InlineKeyButton.REJECTION);
+        List<List<InlineKeyboardButton>> rowInLine =
+                createListButton(messageCustomer, doneButton, rejectionButton);
+
+        inlineKeyboardMarkup.setKeyboard(rowInLine);
+        return inlineKeyboardMarkup;
+    }
+    public InlineKeyboardMarkup initInlineKeyboardShowMyOrderCustomer() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var messageExecutor = createButton("Отправить сообщение исполнителю", InlineKeyButton.MESSAGE_EXECUTOR);
+        var editButton = createButton("Изменить", InlineKeyButton.EDIT);
+        var closeButton = createButton("Закрыть", InlineKeyButton.CLOSE);
+        var deleteButton = createButton("Удалить", InlineKeyButton.DELETE);
+
+        List<InlineKeyboardButton> rowsLine = new ArrayList<>();
+        rowsLine.add(editButton);
+        rowsLine.add(closeButton);
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        rowsInLine.add(Collections.singletonList(messageExecutor));
+        rowsInLine.add(rowsLine);
+        rowsInLine.add(Collections.singletonList(deleteButton));
+
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
     }
 
     public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourier() {
@@ -42,11 +74,13 @@ public class InlineKeyboardInitializer {
         var courierCategoryAuto = createButton("Курьер на авто", Category.COURIER_AUTO);
         var courierCategoryBuyAndDelivery = createButton("Купить и доставить", Category.COURIER_BUY_AND_DELIVER);
         var courierCategoryFoodDelivery = createButton("Доставка еды", Category.COURIER_FOOD_DELIVERY);
+        var courierCategoryUrgentDelivery = createButton("Срочная доставка", Category.COURIER_URGENT_DELIVERY);
         var courierCategoryOtherDelivery = createButton("Разное", Category.COURIER_OTHER_DELIVERY);
 
         List<List<InlineKeyboardButton>> rowsInLine =
                 createListButton(courierCategoryWalking, courierCategoryAuto, courierCategoryBuyAndDelivery,
-                        courierCategoryFoodDelivery, courierCategoryOtherDelivery);
+                        courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery);
+
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
         return inlineKeyboardMarkup;
     }

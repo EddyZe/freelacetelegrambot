@@ -53,5 +53,7 @@ public class Order {
     private LocalDateTime createdAt;
 
     @Column(name = "category")
+    @Enumerated(EnumType.STRING)
     private Category category;
+
 }

@@ -24,6 +24,8 @@ public class UserSingUpDTO {
     @NotEmpty(message = "Email не должен быть пустым.")
     private String email;
 
+    private String name;
+
     @NotEmpty (message = "Номер телефона не должен быть пустым.")
     @Pattern(regexp = "^\\+\\d{11}", message = "Номер должен быть в формате: +79998887766")
     @Column(name = "phone_number", unique = true)

@@ -38,6 +38,7 @@ public class UserService {
         if (userRepository.findByEmail(userSingUpDTO.getEmail()).isPresent())
             throw new UserNotValidException("Такой email занят! Повторите попытку");
         User user = convertToCustomer(userSingUpDTO);
+        user.setName(userSingUpDTO.getName());
         user.setState(State.BASIK); //TODO Изменить на NON_ACTIVE и настроить mailService
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
@@ -45,6 +46,10 @@ public class UserService {
 
     public void save(User user) {
         userRepository.save(user);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
 

@@ -28,6 +28,9 @@ public class User {
     @Column(name = "chat_id")
     private long chatId;
 
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "email", unique = true)
     private String email;
 

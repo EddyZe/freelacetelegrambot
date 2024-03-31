@@ -2,16 +2,19 @@ package com.example.freelacetelegrambot.bot;
 
 import com.example.freelacetelegrambot.comand.CreateTaskCommand;
 import com.example.freelacetelegrambot.comand.RegistrationCommand;
+import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.enums.Commands;
 import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
+import com.example.freelacetelegrambot.exception.UserNotFoundException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;
 import com.example.freelacetelegrambot.util.ReplyKeyboardInitializer;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -24,7 +27,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +43,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final Map<Long, Order> createdOrder = new HashMap<>();
     private final ReplyKeyboardInitializer keyboardInitializer;
     private final CreateTaskCommand createTaskCommand;
+    private final OrderController orderController;
     private final InlineKeyboardInitializer inlineKeyboardInitializer;
     private final RegistrationCommand registrationCommand;
     private final UserController userController;
@@ -45,13 +51,14 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
                                 @Value("${telegram.bot.username}") String botUserName,
-                                ReplyKeyboardInitializer keyboardInitializer, CreateTaskCommand createTaskCommand,
+                                ReplyKeyboardInitializer keyboardInitializer, CreateTaskCommand createTaskCommand, OrderController orderController,
                                 InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, UserController userController) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
         this.createTaskCommand = createTaskCommand;
+        this.orderController = orderController;
         this.inlineKeyboardInitializer = inlineKeyboardInitializer;
         this.registrationCommand = registrationCommand;
         this.userController = userController;
@@ -79,12 +86,51 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                     Подкатегорию указывать не обязатьльно. Если ее не указать,то задача будет отображаться во всем разделе.
                     Просто отправьте адрес, если желаете пропустить этот шаг.""";
 
-            Order order = createdOrder.get(chatId);
-            order.setCategory(Category.COURIER);
-            User user = order.getCustomer();
-            user.setState(State.CREATE_TASK_ADDRESS);
+            selectCategory(chatId, Category.COURIER);
             editMessage(message, chatId, response,
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+
+        } else if (callBackData.equals(Category.COURIER_AUTO.name())) {
+            String response = "Вы выбрали подкатегорию - 'курьер на авто'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId ,Category.COURIER_AUTO);
+            editMessage(message, chatId, response, null);
+
+        } else if (callBackData.equals(Category.COURIER_BUY_AND_DELIVER.name())) {
+            String response = "Вы выбрали подкатегорию - 'Купить и доставить'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId, Category.COURIER_BUY_AND_DELIVER);
+            editMessage(message, chatId, response, null);
+
+        } else if (callBackData.equals(Category.COURIER_FOOD_DELIVERY.name())) {
+            String response = "Вы выбрали подкатегорию - 'Доставка еды'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId, Category.COURIER_FOOD_DELIVERY);
+            editMessage(message, chatId, response, null);
+
+        } else if (callBackData.equals(Category.COURIER_WALKING.name())) {
+            String response = "Вы выбрали подкатегорию - 'Пеший курьер'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_WALKING);
+            editMessage(message, chatId, response, null);
+
+        } else if (callBackData.equals(Category.COURIER_OTHER_DELIVERY.name())) {
+            String response = "Вы выбрали подкатегорию - 'Разное'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_OTHER_DELIVERY);
+            editMessage(message, chatId, response, null);
+
+        } else if (callBackData.equals(Category.COURIER_URGENT_DELIVERY.name())) {
+            String response = "Вы выбрали подкатегорию - 'Срочная доставка'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_URGENT_DELIVERY);
+            editMessage(message, chatId, response, null);
 
         }
     }
@@ -103,12 +149,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             } else if (text.equals(Commands.CUSTOMER.toString()) || userCommand.containsKey(chatId)
                             && userCommand.get(chatId).equals(Commands.CUSTOMER.toString())) {
 
-                authorization(chatId, text, Role.CUSTOMER);
+                authorization(message, text, Role.CUSTOMER);
 
             } else if (text.equals(Commands.EXECUTOR.toString()) || userCommand.containsKey(chatId)
                              && userCommand.get(chatId).equals(Commands.EXECUTOR.toString())) {
 
-                authorization(chatId, text, Role.EXECUTOR);
+                authorization(message, text, Role.EXECUTOR);
 
             } else if (text.equals(Commands.GO_BACK_ROLE.toString())) {
 
@@ -117,21 +163,104 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             } else if (text.equals(Commands.CREATE_TASK.toString()) || userCommand.containsKey(chatId)
                             && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
                 createOrder(chatId, text);
+
+            } else if (text.equals(Commands.MY_CREATED_TASKS.toString())) {
+                showMyOrdersOrTask(chatId);
             }
         }
     }
 
-    private void createOrder(long chatId, String text) {
-        Optional<User> user = userController.findByChatId(chatId);
-        if (user.isEmpty()) {
-            String response = "Вы не зарегистрированы! Выберите рольк и пройдите регистрацию!";
-            sendMessage(chatId, response, keyboardInitializer.initKeyBoardStart());
+    private void showMyOrdersOrTask(long chatId) {
+        User user = findUser(chatId);
+        if (user == null)
+            return;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        switch (user.getRole()) {
+            case CUSTOMER -> {
+                List<Order> orders= orderController.findByCustomerChatId(chatId);
+                showOrdersCustomer(chatId, orders, dtf);
+            } case EXECUTOR -> {
+                List<Order> orders= orderController.findByExecutorChatId(chatId);
+                showTasksExecutor(chatId, orders, dtf);
+            }
+        }
+    }
+
+    private void showTasksExecutor(long chatId, List<Order> orders, DateTimeFormatter dtf) {
+        if (orders.isEmpty()) {
+            sendMessage(chatId, "Пока что список ваших заданий пуст.",
+                    keyboardInitializer.initKeyBoardExecutor());
             return;
         }
-        if (!checkAccountActive(chatId, user.get()))
-            return;
+        orders.forEach(order -> {
+            String response = String.format(
+                    """
+                            Номер задания: %s.
+                            Название задания: %s.
+                            Описание задания: %s.
+                            Желаемая стоимость: %s.
+                            Категория: %s.
+                            Заказчик: %s.
+                            Адрес: %s.\s
+                            Создано: %s.
+                            """,
+                    order.getId(), order.getName(), order.getDescription(), order.getPrice(),
+                    order.getCategory().toString(), order.getCustomer().getName(),
+                    order.getOrderAddress(),
+                    dtf.format(order.getCreatedAt()));
 
-        generateOrder(chatId, text, user.get());
+            sendMessage(chatId, response, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderExecutor());
+        });
+    }
+
+    private void showOrdersCustomer(long chatId, List<Order> orders, DateTimeFormatter dtf) {
+        if (orders.isEmpty()) {
+            sendMessage(chatId, "Пока что список ваших заданий пуст.",
+                    keyboardInitializer.initKeyBoardExecutor());
+            return;
+        }
+        orders.forEach(order -> {
+
+            String executor = order.getExecutor() == null ? "Не найден" :
+                    order.getExecutor().getName();
+
+            String response = String.format(
+                    """
+                            Номер задания: %s.
+                            Название задания: %s.
+                            Описание задания: %s.
+                            Желаемая стоимость: %s.
+                            Категория: %s.
+                            Исполнитель: %s.
+                            Адрес: %s.\s
+                            Создано: %s.
+                            """,
+                    order.getId(), order.getName(), order.getDescription(), order.getPrice(),
+                    order.getCategory().toString(), executor, order.getOrderAddress(),
+                    dtf.format(order.getCreatedAt()));
+
+            sendMessage(chatId, response, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderCustomer());
+        });
+    }
+
+    private void createOrder(long chatId, String text) {
+        User user = findUser(chatId);
+
+        if (user == null) return;
+
+        generateOrder(chatId, text, user);
+    }
+
+    private User findUser(long chatId) {
+        Optional<User> user = userController.findByChatId(chatId);
+        if (user.isEmpty()) {
+            String response = "Вы не зарегистрированы! Выберите роль и пройдите регистрацию!";
+            sendMessage(chatId, response, keyboardInitializer.initKeyBoardStart());
+            return null;
+        }
+        if (!checkAccountActive(chatId, user.get()))
+            return null;
+        return user.get();
     }
 
     private void generateOrder(long chatId, String text, User customer) {
@@ -167,7 +296,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         }
     }
 
-    private void authorization(long chatId, String text, Role role) {
+    private void authorization(Message message, String text, Role role) {
+        long chatId = message.getChatId();
         Optional<User> user = userController.findByChatId(chatId);
         if (user.isPresent()) {
             user.get().setRole(role);
@@ -180,7 +310,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
             sendMessage(chatId, response, keyboardMarkup);
         } else {
-            registration(chatId, text, role);
+            registration(message, text, role);
         }
     }
 
@@ -196,7 +326,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         return true;
     }
 
-    private void registration(long chatId, String text, Role role) {
+    private void registration(Message message, String text, Role role) {
+        long chatId = message.getChatId();
         UserSingUpDTO userSingUpDTO;
 
         if (text.equalsIgnoreCase(Commands.CANCEL.toString())) {
@@ -213,8 +344,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             }
             sendMessage(chatId, response, keyboardMarkup);
         } else {
+            var chat = message.getChat();
+            var name = chat.getUserName() == null ?
+                    chat.getUserName() : chat.getFirstName() + " " + chat.getLastName();
             userSingUpDTO = UserSingUpDTO.builder()
                     .chatId(chatId)
+                    .name(name)
                     .state(State.REGISTRATION_PHONE_NUMBER)
                     .role(role)
                     .build();
@@ -254,6 +389,13 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void selectCategory(long chatId, Category category) {
+        Order order = createdOrder.get(chatId);
+        order.setCategory(category);
+        User user = order.getCustomer();
+        user.setState(State.CREATE_TASK_ADDRESS);
     }
 
     private void cancel(long chatId) {
