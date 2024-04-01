@@ -1,9 +1,6 @@
 package com.example.freelacetelegrambot.bot;
 
-import com.example.freelacetelegrambot.comand.CreateTaskCommand;
-import com.example.freelacetelegrambot.comand.RegistrationCommand;
-import com.example.freelacetelegrambot.comand.SearchTaskCommand;
-import com.example.freelacetelegrambot.comand.ShowOrderOrTaskCommand;
+import com.example.freelacetelegrambot.comand.*;
 import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
@@ -34,22 +31,27 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final Map<Long, String> userCommand = new HashMap<>();
     private final Map<Long, UserSingUpDTO> userRegistration = new HashMap<>();
     private final Map<Long, Order> createdOrder = new HashMap<>();
+
     private final ReplyKeyboardInitializer keyboardInitializer;
-    private final OrderController orderController;
     private final InlineKeyboardInitializer inlineKeyboardInitializer;
+
+    private final OrderController orderController;
+    private final UserController userController;
+
     private final RegistrationCommand registrationCommand;
     private final SearchTaskCommand searchTasksCommand;
     private final CreateTaskCommand createTaskCommand;
     private final ShowOrderOrTaskCommand showOrderOrTaskCommand;
-    private final UserController userController;
+    private final SearchExecutorCommand searchExecutorCommand;
+    private final SettingCommand settingCommand;
 
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
                                 @Value("${telegram.bot.username}") String botUserName,
                                 ReplyKeyboardInitializer keyboardInitializer, CreateTaskCommand createTaskCommand,
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
-                                RegistrationCommand registrationCommand, SearchTaskCommand searchTasksCommand, ShowOrderOrTaskCommand showOrderOrTaskCommand,
-                                UserController userController) {
+                                RegistrationCommand registrationCommand, SearchTaskCommand searchTasksCommand,
+                                ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController, SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
@@ -60,6 +62,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         this.searchTasksCommand = searchTasksCommand;
         this.showOrderOrTaskCommand = showOrderOrTaskCommand;
         this.userController = userController;
+        this.searchExecutorCommand = searchExecutorCommand;
+        this.settingCommand = settingCommand;
     }
 
     @Override
@@ -78,165 +82,62 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void checkedCallBackQuery(Message message, long chatId, String callBackData) {
         User user = null;
+        String command = null;
         StringBuilder selectCategory = new StringBuilder(
                 "Чтобы убрать ненужные категории, нажмите на нее повторно. \n\nВыбранные категори: \n");
         if (!userCommand.containsKey(chatId)) {
             user = findUser(chatId);
         }
         if (callBackData.equals(Category.COURIER.name())) {
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = """
-                        Выберите подкатегорию.
-                        Подкатегорию указывать не обязатьльно. Если ее не указать,то задача будет отображаться во всем разделе.
-                        Просто отправьте адрес, если желаете пропустить этот шаг.""";
-
-                selectCategory(chatId, Category.COURIER);
-                editMessage(message, chatId, response,
-                        inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierCreateOrder());
-                return;
-            }
-            StringBuilder response = new StringBuilder("""
-                    Выберите подкатегории, в которых нужно искать. Так же будут показаны задания из ваших избранных категорий. Выбранные категории будут автоматически добавлены в избранные.
-                    После того как сделаете выбор, нажмите кнопку икать.
-
-                    Выбранные категории:\s
-                    """);
-
-            user.getLikeCategories().forEach(category ->
-                    response.append("-")
-                            .append(category)
-                            .append("\n"));
-
-            sendMessage(chatId, response.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
+            choosingCategories(message, chatId, user);
 
         } else if (callBackData.equals(Category.COURIER_AUTO.name())) {
 
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'курьер на авто'." +
-                        " Введите адрес, где нужно выполнить задачу";
-
-                selectCategory(chatId, Category.COURIER_AUTO);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_AUTO, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryCourierAuto(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(Category.COURIER_BUY_AND_DELIVER.name())) {
 
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'Купить и доставить'." +
-                        " Введите адрес, где нужно выполнить задачу";
-
-                selectCategory(chatId, Category.COURIER_BUY_AND_DELIVER);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_BUY_AND_DELIVER, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryCourierBuyAndDeliver(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(Category.COURIER_FOOD_DELIVERY.name())) {
 
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'Доставка еды'." +
-                        " Введите адрес, где нужно выполнить задачу";
-
-                selectCategory(chatId, Category.COURIER_FOOD_DELIVERY);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_FOOD_DELIVERY, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryCourierFoodDelivery(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(Category.COURIER_WALKING.name())) {
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'Пеший курьер'." +
-                        " Введите адрес где нужно выполнить задачу.";
 
-                selectCategory(chatId, Category.COURIER_WALKING);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_WALKING, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryCourierWalking(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(Category.COURIER_OTHER_DELIVERY.name())) {
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'Разное'." +
-                        " Введите адрес где нужно выполнить задачу.";
 
-                selectCategory(chatId, Category.COURIER_OTHER_DELIVERY);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_OTHER_DELIVERY, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryCourierOtherDelivery(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(Category.COURIER_URGENT_DELIVERY.name())) {
-            if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
-                String response = "Вы выбрали подкатегорию - 'Срочная доставка'." +
-                        " Введите адрес где нужно выполнить задачу.";
 
-                selectCategory(chatId, Category.COURIER_URGENT_DELIVERY);
-                editMessage(message, chatId, response, null);
-                return;
-            }
-
-            assert user != null;
-            addCategoryInSearchList(user, Category.COURIER_URGENT_DELIVERY, selectCategory);
-            editMessage(message, chatId, selectCategory.toString(),
-                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierSearchTasks());
-            userController.save(user);
+            choosingCategoryUrgentDelivery(message, chatId, user, selectCategory);
 
         } else if (callBackData.equals(InlineKeyButton.DELETE.name())) {
-            String response = "Задание удалено";
-            String orderId = message.getText().split("\n")[0]
-                    .split(":")[1]
-                    .replace(".", "");
-            orderController.deleteById(Long.parseLong(orderId.trim()));
-            editMessage(message, chatId, response, null);
-        } else if (callBackData.equals(Category.SEARCH_IN_CATEGORY.name())) {
-            List<String> resultList = searchTasksCommand.execute(user.getLikeCategories());
-            if (resultList.isEmpty())
-                sendMessage(chatId, "Пока что нет заданий в данных категориях.",
-                        keyboardInitializer.initKeyBoardExecutor());
-            else {
-                resultList.forEach(order ->
-                    sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyBoardSearchTask()));
-            }
-        }
-    }
 
-    private void addCategoryInSearchList(User user, Category category, StringBuilder selectCategory) {
-        if (user.getLikeCategories().contains(category))
-            user.getLikeCategories().remove(category);
-        else
-            user.getLikeCategories().add(category);
-        user.getLikeCategories().forEach(c ->
-                selectCategory.append("-")
-                .append(c.toString())
-                .append(" \n"));
+            deleteOrder(message, chatId);
+
+        } else if (callBackData.equals(Category.SEARCH_IN_CATEGORY.name())) {
+
+            command = message.getText().split("\n\n")[0] + "\n\n";
+            searchTasksOrExecutor(chatId, command, user);
+
+        } else if (callBackData.equals(InlineKeyButton.ADD_LIKE_CATEGORY.name())) {
+
+            assert user != null;
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeCategory());
+
+        } else if (callBackData.equals(InlineKeyButton.GO_BACK_SETTING.name())) {
+
+            assert user != null;
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response, inlineKeyboardInitializer.initInlineKeyboardSetting());
+
+        }
     }
 
     private void checkedCommands(Message message, long chatId) {
@@ -244,19 +145,18 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             String text = message.getText();
 
             if (text.equals(Commands.START.toString())) {
-
                 String response = String.format("Привет, %s. Я помогу тебе найти исполнителя или заказчика." +
                         "(Доступна только категория курьеры)", message.getChat().getFirstName());
 
                 sendMessage(chatId, response, keyboardInitializer.initKeyBoardStart());
 
             } else if (text.equals(Commands.CUSTOMER.toString()) || userCommand.containsKey(chatId)
-                            && userCommand.get(chatId).equals(Commands.CUSTOMER.toString())) {
+                    && userCommand.get(chatId).equals(Commands.CUSTOMER.toString())) {
 
                 authorization(message, text, Role.CUSTOMER);
 
             } else if (text.equals(Commands.EXECUTOR.toString()) || userCommand.containsKey(chatId)
-                             && userCommand.get(chatId).equals(Commands.EXECUTOR.toString())) {
+                    && userCommand.get(chatId).equals(Commands.EXECUTOR.toString())) {
 
                 authorization(message, text, Role.EXECUTOR);
 
@@ -265,15 +165,285 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 sendMessage(chatId, "Хотите поменять роль?", keyboardInitializer.initKeyBoardStart());
 
             } else if (text.equals(Commands.CREATE_TASK.toString()) || userCommand.containsKey(chatId)
-                            && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+                    && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
                 createOrder(chatId, text);
 
             } else if (text.equals(Commands.MY_CREATED_TASKS.toString())) {
                 showMyOrdersOrTask(chatId);
+
             } else if (text.equals(Commands.SEARCH_TASK.toString())) {
-                sendMessage(chatId, "Выберите категорию", inlineKeyboardInitializer.initInlineKeyboardSelectCategory());
+                sendMessage(chatId, "Поиск заданий.\n\nВыберите категорию:",
+                        inlineKeyboardInitializer.initInlineKeyboardSelectCategory());
+
+            } else if (text.equals(Commands.SEARCH_EXECUTOR.toString())) {
+                sendMessage(chatId, "Поиск исполнителей.\n\nВыберите категорию:",
+                        inlineKeyboardInitializer.initInlineKeyboardSelectCategory());
+
+            } else if (text.equals(Commands.SETTING.toString())) {
+                User user = findUser(chatId);
+                assert user != null;
+                String response = settingCommand.execute(user);
+                sendMessage(chatId, response,
+                        inlineKeyboardInitializer.initInlineKeyboardSetting());
             }
         }
+    }
+
+    private void deleteOrder(Message message, long chatId) {
+        String response = "Задание удалено";
+        String orderId = message.getText().split("\n")[0]
+                .split(":")[1]
+                .replace(".", "");
+        orderController.deleteById(Long.parseLong(orderId.trim()));
+        editMessage(message, chatId, response, null);
+    }
+
+    private void choosingCategoryUrgentDelivery(Message message, long chatId, User user,
+                                                StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'Срочная доставка'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_URGENT_DELIVERY);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_URGENT_DELIVERY, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+
+            addCategoryInSearchList(user, Category.COURIER_URGENT_DELIVERY, selectCategory);
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategoryCourierOtherDelivery(Message message, long chatId, User user,
+                                                      StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'Разное'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_OTHER_DELIVERY);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_OTHER_DELIVERY, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+            addCategoryInSearchList(user, Category.COURIER_OTHER_DELIVERY, selectCategory);
+
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategoryCourierWalking(Message message, long chatId, User user,
+                                                StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'Пеший курьер'." +
+                    " Введите адрес где нужно выполнить задачу.";
+
+            selectCategory(chatId, Category.COURIER_WALKING);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_WALKING, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+            addCategoryInSearchList(user, Category.COURIER_WALKING, selectCategory);
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategoryCourierFoodDelivery(Message message, long chatId, User user,
+                                                     StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'Доставка еды'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId, Category.COURIER_FOOD_DELIVERY);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_FOOD_DELIVERY, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+            addCategoryInSearchList(user, Category.COURIER_FOOD_DELIVERY, selectCategory);
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategoryCourierBuyAndDeliver(Message message, long chatId, User user,
+                                                      StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'Купить и доставить'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId, Category.COURIER_BUY_AND_DELIVER);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_BUY_AND_DELIVER, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+            addCategoryInSearchList(user, Category.COURIER_BUY_AND_DELIVER, selectCategory);
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategoryCourierAuto(Message message, long chatId, User user,
+                                             StringBuilder selectCategory) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = "Вы выбрали подкатегорию - 'курьер на авто'." +
+                    " Введите адрес, где нужно выполнить задачу";
+
+            selectCategory(chatId, Category.COURIER_AUTO);
+            editMessage(message, chatId, response, null);
+            return;
+        }
+
+        assert user != null;
+        command = message.getText().split("\n\n")[0] + "\n\n";
+        if (command.startsWith("Настройки профиля")) {
+            addCategoryInSearchList(user, Category.COURIER_AUTO, selectCategory);
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+        } else {
+            addCategoryInSearchList(user, Category.COURIER_AUTO, selectCategory);
+            editMessage(message, chatId, command + selectCategory,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+        }
+        userController.save(user);
+    }
+
+    private void choosingCategories(Message message, long chatId, User user) {
+        String command;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
+            String response = """
+                    Выберите подкатегорию.
+                    Подкатегорию указывать не обязатьльно. Если ее не указать,
+                    то задача будет отображаться во всем разделе.
+                    Просто отправьте адрес, если желаете пропустить этот шаг.""";
+
+            selectCategory(chatId, Category.COURIER);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourierCreateOrder());
+            return;
+        }
+        command = message.getText().split("\n\n")[0] + "\n\n";
+        if (command.startsWith("Настройки профиля")) {
+            String response = settingCommand.execute(user);
+            editMessage(message, chatId, response,
+                    inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
+            return;
+        }
+        StringBuilder response = new StringBuilder("""
+                Выберите подкатегории, в которых нужно искать. Так же будет показан результат из ваших избранных категорий. Выбранные категории будут автоматически добавлены в избранные.
+                После того как сделаете выбор, нажмите кнопку икать.
+
+                Выбранные категории:\s
+                """);
+
+        user.getLikeCategories().forEach(category ->
+                response.append("-")
+                        .append(category)
+                        .append("\n"));
+
+        sendMessage(chatId, command + response,
+                inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
+    }
+
+    private void searchTasksOrExecutor(long chatId, String command, User user) {
+        if (command.startsWith("Поиск заданий.")) {
+            searchTasks(chatId, user);
+        } else {
+            searchExecutors(chatId, user);
+        }
+    }
+
+    private void searchExecutors(long chatId, User user) {
+        List<String> resultList;
+        resultList = searchExecutorCommand.execute(Role.EXECUTOR, user.getLikeCategories());
+        if (resultList == null || resultList.isEmpty())
+            sendMessage(chatId, "Пока что нет исполнителей в данных категориях.",
+                    keyboardInitializer.initKeyBoardCustomer());
+        else
+            resultList.forEach(executor ->
+                    sendMessage(chatId, executor, inlineKeyboardInitializer.initInlineKeyBoardSearchExecutor()));
+    }
+
+    private void searchTasks(long chatId, User user) {
+        List<String> resultList;
+        resultList = searchTasksCommand.execute(user.getLikeCategories());
+        if (resultList == null || resultList.isEmpty())
+            sendMessage(chatId, "Пока что нет заданий в данных категориях.",
+                    keyboardInitializer.initKeyBoardExecutor());
+        else {
+            resultList.forEach(order ->
+                    sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyBoardSearchTask()));
+        }
+    }
+
+    private void addCategoryInSearchList(User user, Category category,
+                                         StringBuilder selectCategory) {
+        if (user.getLikeCategories().contains(category))
+            user.getLikeCategories().remove(category);
+        else
+            user.getLikeCategories().add(category);
+
+        user.getLikeCategories().forEach(c ->
+                selectCategory.append("-")
+                        .append(c.toString())
+                        .append(" \n"));
     }
 
     private void showMyOrdersOrTask(long chatId) {
@@ -282,7 +452,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             return;
         switch (user.getRole()) {
             case CUSTOMER -> {
-                List<Order> orders= orderController.findByCustomerChatId(chatId);
+                List<Order> orders = orderController.findByCustomerChatId(chatId);
                 if (orders.isEmpty()) {
                     sendMessage(chatId, "Список ваших заданий пуст.",
                             keyboardInitializer.initKeyBoardCustomer());
@@ -290,8 +460,9 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 }
                 showOrderOrTaskCommand.showOrdersCustomer(orders).forEach(order ->
                         sendMessage(chatId, order, inlineKeyboardInitializer.initInlineKeyboardShowMyOrderCustomer()));
-            } case EXECUTOR -> {
-                List<Order> orders= orderController.findByExecutorChatId(chatId);
+            }
+            case EXECUTOR -> {
+                List<Order> orders = orderController.findByExecutorChatId(chatId);
                 if (orders.isEmpty()) {
                     sendMessage(chatId, "Список ваших задач пуст.",
                             keyboardInitializer.initKeyBoardExecutor());
@@ -375,7 +546,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     }
 
     private boolean checkAccountActive(long chatId, User user) {
-        if(user.getState() == State.NOT_ACTIVE_ACCOUNT) {
+        if (user.getState() == State.NOT_ACTIVE_ACCOUNT) {
             String response = "Вы не подтвердили email. Перейдите по ссылке в письме.\n" +
                     "Так же вы можете отправить письмо повторно, или сменить адрес в настройках!";
             ReplyKeyboardMarkup replyKeyboardMarkup = user.getRole() == Role.CUSTOMER ?
@@ -405,8 +576,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             sendMessage(chatId, response, keyboardMarkup);
         } else {
             var chat = message.getChat();
-            var name = chat.getUserName() == null ?
-                    chat.getUserName() : chat.getFirstName() + " " + chat.getLastName();
+            var name = chat.getUserName() != null ? chat.getUserName() :
+                    chat.getFirstName() + " " + chat.getLastName();
             userSingUpDTO = UserSingUpDTO.builder()
                     .chatId(chatId)
                     .name(name)

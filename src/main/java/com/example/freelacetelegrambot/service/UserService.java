@@ -1,6 +1,7 @@
 package com.example.freelacetelegrambot.service;
 
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
+import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
 import com.example.freelacetelegrambot.exception.UserNotValidException;
 import com.example.freelacetelegrambot.model.User;
@@ -26,8 +27,12 @@ public class UserService {
     }
 
 
-    public List<User> findAllCustomer() {
+    public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+    public List<User> findByRole(Role role) {
+        return userRepository.findByRole(role);
     }
 
     public Optional<User> findByChatId(long chatId) {
@@ -37,6 +42,10 @@ public class UserService {
     public void registration (UserSingUpDTO userSingUpDTO) {
         if (userRepository.findByEmail(userSingUpDTO.getEmail()).isPresent())
             throw new UserNotValidException("Такой email занят! Повторите попытку");
+        if (userRepository.findByPhoneNumber(userSingUpDTO.getPhoneNumber()).isPresent()) {
+            userSingUpDTO.setState(State.REGISTRATION_PHONE_NUMBER);
+            throw new UserNotValidException("Такой номер телефона занят! Повторите попытку");
+        }
         User user = convertToCustomer(userSingUpDTO);
         user.setName(userSingUpDTO.getName());
         user.setState(State.BASIK); //TODO Изменить на NON_ACTIVE и настроить mailService

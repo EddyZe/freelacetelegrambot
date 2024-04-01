@@ -19,7 +19,7 @@ public class SearchTaskCommand {
         this.orderController = orderController;
     }
 
-    public List<String> execute (List<Category> categories) {
+    public List<String> execute(List<Category> categories) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
         List<Order> orders = findSelectedOrder(categories);
         List<String> resultList = new ArrayList<>();
@@ -48,16 +48,11 @@ public class SearchTaskCommand {
     public List<Order> findSelectedOrder(List<Category> categories) {
         List<Order> allOrders = orderController.findAll();
         List<Order> resultList = new ArrayList<>();
-        if (categories.contains(Category.COURIER)) {
-            for (Order order : allOrders) {
-                if (order.getCategory().name().startsWith(Category.COURIER.name()))
-                    resultList.add(order);
-            }
-        } else {
-            for (Order order : allOrders) {
-                if (categories.contains(order.getCategory()))
-                    resultList.add(order);
-            }
+        for (Order order : allOrders) {
+            if (categories.contains(order.getCategory()))
+                resultList.add(order);
+            if (order.getCategory().name().equals(Category.COURIER.name()))
+                resultList.add(order);
         }
         return resultList;
     }

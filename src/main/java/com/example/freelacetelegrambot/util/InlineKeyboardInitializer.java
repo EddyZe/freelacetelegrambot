@@ -88,21 +88,36 @@ public class InlineKeyboardInitializer {
         return inlineKeyboardMarkup;
     }
 
-    public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourierSearchTasks() {
-        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+    public InlineKeyboardMarkup inlineKeyboardMarkupSelectCategoryCourier() {
+        inlineKeyboardMarkup = inlineKeyboardMarkupSelectCategoryCourierCreateOrder();
 
-        var courierCategoryWalking = createButton("Пеший курьер", Category.COURIER_WALKING);
-        var courierCategoryAuto = createButton("Курьер на авто", Category.COURIER_AUTO);
-        var courierCategoryBuyAndDelivery = createButton("Купить и доставить", Category.COURIER_BUY_AND_DELIVER);
-        var courierCategoryFoodDelivery = createButton("Доставка еды", Category.COURIER_FOOD_DELIVERY);
-        var courierCategoryUrgentDelivery = createButton("Срочная доставка", Category.COURIER_URGENT_DELIVERY);
-        var courierCategoryOtherDelivery = createButton("Разное", Category.COURIER_OTHER_DELIVERY);
         var courierCategorySearch = createButton("Искать", Category.SEARCH_IN_CATEGORY);
 
-        List<List<InlineKeyboardButton>> rowsInLine =
-                createListButton(courierCategoryWalking, courierCategoryAuto, courierCategoryBuyAndDelivery,
-                        courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery,
-                        courierCategorySearch);
+        List<List<InlineKeyboardButton>> rowsInLine = inlineKeyboardMarkup.getKeyboard();
+        rowsInLine.add(Collections.singletonList(courierCategorySearch));
+
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyboardAddLikeCategory() {
+        inlineKeyboardMarkup = initInlineKeyboardSelectCategory();
+        var goBackSetting = createButton("Вернуться в настройки", InlineKeyButton.GO_BACK_SETTING);
+
+        List<List<InlineKeyboardButton>> rowsInLine = inlineKeyboardMarkup.getKeyboard();
+        rowsInLine.add(Collections.singletonList(goBackSetting));
+
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyboardAddLikeSubCategoriesCourier() {
+        inlineKeyboardMarkup = inlineKeyboardMarkupSelectCategoryCourierCreateOrder();
+
+        var goBackSetting = createButton("Вернуться в настройки", InlineKeyButton.GO_BACK_SETTING);
+
+        List<List<InlineKeyboardButton>> rowsInLine = inlineKeyboardMarkup.getKeyboard();
+        rowsInLine.add(Collections.singletonList(goBackSetting));
 
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
         return inlineKeyboardMarkup;
@@ -112,8 +127,9 @@ public class InlineKeyboardInitializer {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         var respondButton = createButton("Откликнуться", InlineKeyButton.RESPOND);
+        var commentButton = createButton("Отзывы заказчика", InlineKeyButton.SHOW_COMMENT);
 
-        List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton);
+        List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton, commentButton);
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
         return inlineKeyboardMarkup;
     }
@@ -125,5 +141,30 @@ public class InlineKeyboardInitializer {
                 rowsInLine.add(Collections.singletonList(inlineKeyboardButton)));
 
         return rowsInLine;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyBoardSearchExecutor() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var respondButton = createButton("Связаться с исполнителем", InlineKeyButton.SEND_MESSAGE_EXECUTOR);
+        var commentButton = createButton("Отзывы исполнителя", InlineKeyButton.SHOW_COMMENT);
+
+        List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton, commentButton);
+        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyboardSetting() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var editMail = createButton("Изменить email", InlineKeyButton.EDIT_MAIL);
+        var resendTheMail = createButton("Отправить повторно письмо для активации", InlineKeyButton.RESEND_MAIL);
+        var editPhoneNumber = createButton("Изменить номер телефона", InlineKeyButton.EDIT_PHONE_NUMBER);
+        var addLikeCategories = createButton("Добавить любимые категории", InlineKeyButton.ADD_LIKE_CATEGORY);
+
+        List<List<InlineKeyboardButton>> rowsLine = createListButton(editMail,
+                editPhoneNumber, resendTheMail, addLikeCategories);
+        inlineKeyboardMarkup.setKeyboard(rowsLine);
+        return inlineKeyboardMarkup;
     }
 }

@@ -1,10 +1,12 @@
 package com.example.freelacetelegrambot.controller;
 
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
+import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.service.UserService;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -31,5 +33,9 @@ public class UserController {
 
     public Optional<User> findByEmail(String email) {
         return userService.findByEmail(email);
+    }
+
+    public List<User> findByRole(Role role) {
+        return userService.findByRole(role);
     }
 }
