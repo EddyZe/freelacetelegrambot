@@ -2,7 +2,7 @@ package com.example.freelacetelegrambot.enums;
 
 public enum StatusOrder {
     OPEN ("Открыт"),
-    CLOSE("Закрыт"),
+    DONE("Выполнен"),
     IN_EXECUTION("В исполнении");
 
     private final String cmd;

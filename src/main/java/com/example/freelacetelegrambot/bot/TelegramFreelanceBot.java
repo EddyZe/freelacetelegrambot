@@ -1,8 +1,8 @@
 package com.example.freelacetelegrambot.bot;
 
 import com.example.freelacetelegrambot.comand.*;
-import com.example.freelacetelegrambot.comand.impl.EditEmailCommand;
-import com.example.freelacetelegrambot.comand.impl.EditPhoneNumber;
+import com.example.freelacetelegrambot.comand.EditEmailCommand;
+import com.example.freelacetelegrambot.comand.EditPhoneNumberCommand;
 import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
@@ -48,7 +48,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final SearchExecutorCommand searchExecutorCommand;
     private final SettingCommand settingCommand;
     private final EditEmailCommand editEmailCommand;
-    private final EditPhoneNumber editPhoneNumber;
+    private final EditPhoneNumberCommand editPhoneNumber;
 
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
@@ -57,7 +57,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SearchTaskCommand searchTasksCommand,
                                 ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
-                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumber editPhoneNumber) {
+                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumberCommand editPhoneNumber) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;

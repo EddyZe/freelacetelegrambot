@@ -1,7 +1,6 @@
 package com.example.freelacetelegrambot.repository;
 
 import com.example.freelacetelegrambot.model.Comment;
-import com.example.freelacetelegrambot.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

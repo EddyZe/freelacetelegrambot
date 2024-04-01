@@ -38,14 +38,11 @@ public class InlineKeyboardInitializer {
 
     public InlineKeyboardMarkup initInlineKeyboardShowMyOrderExecutor() {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        var messageCustomer = createButton("Отправить сообщение заказчику",
-                InlineKeyButton.MESSAGE_CUSTOMER);
-        var doneButton = createButton("Поставить статус: 'Выполнено'",
-                InlineKeyButton.DONE);
-        var rejectionButton = createButton("Отказаться от задания",
-                InlineKeyButton.REJECTION);
+        var messageCustomer = createButton("Отправить сообщение заказчику", InlineKeyButton.MESSAGE_CUSTOMER);
+        var rejectionButton = createButton("Отказаться от задания", InlineKeyButton.REJECTION);
+        var createCommentButton = createButton("Оставить отзыв заказчику", InlineKeyButton.CREATE_COMMENT);
         List<List<InlineKeyboardButton>> rowInLine =
-                createListButton(messageCustomer, doneButton, rejectionButton);
+                createListButton(messageCustomer, createCommentButton, rejectionButton);
 
         inlineKeyboardMarkup.setKeyboard(rowInLine);
         return inlineKeyboardMarkup;
@@ -54,21 +51,16 @@ public class InlineKeyboardInitializer {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         var messageExecutor = createButton("Отправить сообщение исполнителю", InlineKeyButton.MESSAGE_EXECUTOR);
-        var editButton = createButton("Изменить", InlineKeyButton.EDIT);
-        var closeButton = createButton("Выполнено", InlineKeyButton.CLOSE);
+        var doneButton = createButton("Поставить статус: 'Выполнено'",
+                InlineKeyButton.DONE);
         var refuseButton = createButton("Отказаться от исполнителя", InlineKeyButton.REFUSE);
+        var createCommentButton = createButton("Оставить отзыв исполнителю", InlineKeyButton.CREATE_COMMENT);
         var deleteButton = createButton("Удалить", InlineKeyButton.DELETE);
 
-        List<InlineKeyboardButton> rowsLine = new ArrayList<>();
-        rowsLine.add(editButton);
-        rowsLine.add(closeButton);
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        rowsInLine.add(Collections.singletonList(messageExecutor));
-        rowsInLine.add(rowsLine);
-        rowsInLine.add(Collections.singletonList(refuseButton));
-        rowsInLine.add(Collections.singletonList(deleteButton));
+        List<List<InlineKeyboardButton>> rowsLine =
+                createListButton(messageExecutor, doneButton, createCommentButton, refuseButton, deleteButton);
 
-        inlineKeyboardMarkup.setKeyboard(rowsInLine);
+        inlineKeyboardMarkup.setKeyboard(rowsLine);
         return inlineKeyboardMarkup;
     }
 
@@ -162,7 +154,8 @@ public class InlineKeyboardInitializer {
         var editMail = createButton("Изменить email", InlineKeyButton.EDIT_MAIL);
         var resendTheMail = createButton("Отправить повторно письмо для активации", InlineKeyButton.RESEND_MAIL);
         var editPhoneNumber = createButton("Изменить номер телефона", InlineKeyButton.EDIT_PHONE_NUMBER);
-        var addLikeCategories = createButton("Добавить любимые категории", InlineKeyButton.ADD_LIKE_CATEGORY);
+        var addLikeCategories = createButton("Добавить или убрать любимые категории",
+                InlineKeyButton.ADD_LIKE_CATEGORY);
 
         List<List<InlineKeyboardButton>> rowsLine = createListButton(editMail,
                 editPhoneNumber, resendTheMail, addLikeCategories);

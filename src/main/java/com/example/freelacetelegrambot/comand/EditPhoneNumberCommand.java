@@ -1,18 +1,17 @@
-package com.example.freelacetelegrambot.comand.impl;
+package com.example.freelacetelegrambot.comand;
 
 
-import com.example.freelacetelegrambot.comand.EditCommand;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.exception.UserNotValidException;
 import com.example.freelacetelegrambot.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EditPhoneNumber implements EditCommand {
+public class EditPhoneNumberCommand implements EditCommand {
 
     private final UserController userController;
 
-    public EditPhoneNumber(UserController userController) {
+    public EditPhoneNumberCommand(UserController userController) {
         this.userController = userController;
     }
 
