@@ -38,4 +38,8 @@ public class UserController {
     public List<User> findByRole(Role role) {
         return userService.findByRole(role);
     }
+
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return userService.findByPhoneNumber(phoneNumber);
+    }
 }

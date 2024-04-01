@@ -1,10 +1,13 @@
 package com.example.freelacetelegrambot.bot;
 
 import com.example.freelacetelegrambot.comand.*;
+import com.example.freelacetelegrambot.comand.impl.EditEmailCommand;
+import com.example.freelacetelegrambot.comand.impl.EditPhoneNumber;
 import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.*;
+import com.example.freelacetelegrambot.exception.UserNotValidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;
@@ -44,6 +47,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final ShowOrderOrTaskCommand showOrderOrTaskCommand;
     private final SearchExecutorCommand searchExecutorCommand;
     private final SettingCommand settingCommand;
+    private final EditEmailCommand editEmailCommand;
+    private final EditPhoneNumber editPhoneNumber;
 
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
@@ -51,7 +56,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                                 ReplyKeyboardInitializer keyboardInitializer, CreateTaskCommand createTaskCommand,
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SearchTaskCommand searchTasksCommand,
-                                ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController, SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand) {
+                                ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
+                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumber editPhoneNumber) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
@@ -64,6 +70,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         this.userController = userController;
         this.searchExecutorCommand = searchExecutorCommand;
         this.settingCommand = settingCommand;
+        this.editEmailCommand = editEmailCommand;
+        this.editPhoneNumber = editPhoneNumber;
     }
 
     @Override
@@ -82,7 +90,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void checkedCallBackQuery(Message message, long chatId, String callBackData) {
         User user = null;
-        String command = null;
+        String command;
         StringBuilder selectCategory = new StringBuilder(
                 "Чтобы убрать ненужные категории, нажмите на нее повторно. \n\nВыбранные категори: \n");
         if (!userCommand.containsKey(chatId)) {
@@ -137,6 +145,20 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             String response = settingCommand.execute(user);
             editMessage(message, chatId, response, inlineKeyboardInitializer.initInlineKeyboardSetting());
 
+        } else if (callBackData.equals(InlineKeyButton.EDIT_MAIL.name())) {
+            assert user != null;
+            ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
+                    keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
+
+            userCommand.put(chatId, InlineKeyButton.EDIT_MAIL.name());
+            sendMessage(chatId, "Введите новый email:\nЧтобы отменить операцию, введите: 'отмена'", keyboardMarkup);
+        } else if (callBackData.equals(InlineKeyButton.EDIT_PHONE_NUMBER.name())) {
+            assert user != null;
+            ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
+                    keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
+
+            userCommand.put(chatId, InlineKeyButton.EDIT_PHONE_NUMBER.name());
+            sendMessage(chatId, "Введите новый номер:\nЧтобы отменить операцию, введите: 'отмена'", keyboardMarkup);
         }
     }
 
@@ -185,7 +207,37 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 String response = settingCommand.execute(user);
                 sendMessage(chatId, response,
                         inlineKeyboardInitializer.initInlineKeyboardSetting());
+
+            } else if (userCommand.containsKey(chatId) &&
+                    userCommand.get(chatId).equals(InlineKeyButton.EDIT_MAIL.name())) {
+
+                editProfile(chatId, text, editEmailCommand);
+
+            } else if (userCommand.containsKey(chatId) &&
+                    userCommand.get(chatId).equals(InlineKeyButton.EDIT_PHONE_NUMBER.name())) {
+                editProfile(chatId, text, editPhoneNumber);
             }
+        }
+    }
+
+    private void editProfile(long chatId, String text, EditCommand command) {
+        User user = findUser(chatId);
+        assert user != null;
+        ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
+                keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
+
+        if (text.equalsIgnoreCase(Commands.CANCEL.toString())) {
+            sendMessage(chatId, "Вы отменили операцию", keyboardMarkup);
+            userCommand.remove(chatId);
+            return;
+        }
+
+        try {
+            String response = command.execute(text, user);
+            sendMessage(chatId, response, keyboardMarkup);
+            userCommand.remove(chatId);
+        } catch (UserNotValidException e) {
+            sendMessage(chatId, e.getMessage(), keyboardMarkup);
         }
     }
 

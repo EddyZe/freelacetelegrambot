@@ -61,6 +61,10 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber);
+    }
+
 
     private User convertToCustomer(UserSingUpDTO userSingUpDTO) {
         return modelMapper.map(userSingUpDTO, User.class);

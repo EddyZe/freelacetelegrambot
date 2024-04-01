@@ -25,12 +25,13 @@ public class ShowOrderOrTaskCommand {
                                 Желаемая стоимость: %s
                                 Категория: %s.
                                 Заказчик: %s.
+                                Статус: %s.
                                 Адрес: %s.\s
                                 Создано: %s.
                                 """,
                         order.getId(), order.getName(), order.getDescription(), order.getPrice(),
                         order.getCategory().toString(), order.getCustomer().getName(),
-                        order.getOrderAddress(),
+                        order.getStatus().toString(), order.getOrderAddress(),
                         dtf.format(order.getCreatedAt()));
                 result.add(response);
             });
@@ -51,11 +52,12 @@ public class ShowOrderOrTaskCommand {
                             Желаемая стоимость: %s
                             Категория: %s.
                             Исполнитель: %s.
+                            Статус: %s.
                             Адрес: %s.\s
                             Создано: %s.
                             """,
                     order.getId(), order.getName(), order.getDescription(), order.getPrice(),
-                    order.getCategory().toString(), executor, order.getOrderAddress(),
+                    order.getCategory().toString(), executor, order.getStatus(), order.getOrderAddress(),
                     dtf.format(order.getCreatedAt()));
             result.add(response);
         });

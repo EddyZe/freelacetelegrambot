@@ -34,11 +34,12 @@ public class SearchTaskCommand {
                             Описание задания: %s.
                             Желаемая стоимость: %s
                             Категория: %s.
+                            Статус: %s.
                             Адрес: %s.\s
                             Создано: %s.
                             """,
                     order.getId(), order.getName(), order.getDescription(), order.getPrice(),
-                    order.getCategory().toString(), order.getOrderAddress(),
+                    order.getCategory().toString(),order.getStatus(), order.getOrderAddress(),
                     dtf.format(order.getCreatedAt()));
             resultList.add(response);
         });

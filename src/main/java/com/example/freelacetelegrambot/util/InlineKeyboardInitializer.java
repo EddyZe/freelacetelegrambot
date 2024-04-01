@@ -20,7 +20,7 @@ public class InlineKeyboardInitializer {
     public InlineKeyboardMarkup initInlineKeyboardSelectCategory() {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-        var courierCategory = createButton("Услуги укурьера", Category.COURIER);
+        var courierCategory = createButton("Услуги курьера", Category.COURIER);
         List<List<InlineKeyboardButton>> rowsInLine = createListButton(courierCategory);
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
 
@@ -55,7 +55,8 @@ public class InlineKeyboardInitializer {
 
         var messageExecutor = createButton("Отправить сообщение исполнителю", InlineKeyButton.MESSAGE_EXECUTOR);
         var editButton = createButton("Изменить", InlineKeyButton.EDIT);
-        var closeButton = createButton("Закрыть", InlineKeyButton.CLOSE);
+        var closeButton = createButton("Выполнено", InlineKeyButton.CLOSE);
+        var refuseButton = createButton("Отказаться от исполнителя", InlineKeyButton.REFUSE);
         var deleteButton = createButton("Удалить", InlineKeyButton.DELETE);
 
         List<InlineKeyboardButton> rowsLine = new ArrayList<>();
@@ -64,6 +65,7 @@ public class InlineKeyboardInitializer {
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         rowsInLine.add(Collections.singletonList(messageExecutor));
         rowsInLine.add(rowsLine);
+        rowsInLine.add(Collections.singletonList(refuseButton));
         rowsInLine.add(Collections.singletonList(deleteButton));
 
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
