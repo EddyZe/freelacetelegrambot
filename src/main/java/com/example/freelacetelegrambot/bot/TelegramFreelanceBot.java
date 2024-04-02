@@ -316,7 +316,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private void choosingCategory(Message message, long chatId, User user,
                                                 StringBuilder selectCategory, String text, Category category) {
         String command;
-        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {;
+        if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
 
             selectCategory(chatId, category);
             editMessage(message, chatId, text, null);
