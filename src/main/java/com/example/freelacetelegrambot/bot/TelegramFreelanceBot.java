@@ -234,7 +234,14 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                         inlineKeyboardInitializer.initInlineKeyboardSelectCategory());
 
             } else if (text.equals(Commands.SETTING.toString())) {
-                User user = userController.findByChatId(chatId);
+                User user;
+
+                if (!cacheUser.containsKey(chatId)) {
+                    user = userController.findByChatId(chatId);
+                    cacheUser.put(chatId, user);
+                } else
+                    user = cacheUser.get(chatId);
+
                 assert user != null;
                 String response = settingCommand.execute(user);
                 sendMessage(chatId, response,
@@ -255,7 +262,14 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     }
 
     private void editProfile(long chatId, String text, EditCommand command) {
-        User user = userController.findByChatId(chatId);
+        User user;
+
+        if (!cacheUser.containsKey(chatId)) {
+            user = userController.findByChatId(chatId);
+            cacheUser.put(chatId, user);
+        } else
+            user = cacheUser.get(chatId);
+
         assert user != null;
         ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
                 keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
@@ -421,7 +435,14 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     }
 
     private void showMyOrdersOrTask(long chatId) {
-        User user = userController.findByChatId(chatId);
+        User user;
+
+        if (!cacheUser.containsKey(chatId)) {
+            user = userController.findByChatId(chatId);
+            cacheUser.put(chatId, user);
+        } else
+            user = cacheUser.get(chatId);
+
         switch (user.getRole()) {
             case CUSTOMER -> {
                 List<Order> orders = orderController.findByCustomerChatId(chatId);
@@ -447,7 +468,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     }
 
     private void createOrder(long chatId, String text) {
-        User user = userController.findByChatId(chatId);
+        User user;
+        if (!cacheUser.containsKey(chatId)) {
+            user = userController.findByChatId(chatId);
+            cacheUser.put(chatId, user);
+        } else
+            user = cacheUser.get(chatId);
         generateOrder(chatId, text, user);
     }
 
