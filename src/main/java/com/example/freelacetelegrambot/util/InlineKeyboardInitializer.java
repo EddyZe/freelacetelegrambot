@@ -73,10 +73,12 @@ public class InlineKeyboardInitializer {
         var courierCategoryFoodDelivery = createButton("Доставка еды", Category.COURIER_FOOD_DELIVERY);
         var courierCategoryUrgentDelivery = createButton("Срочная доставка", Category.COURIER_URGENT_DELIVERY);
         var courierCategoryOtherDelivery = createButton("Разное", Category.COURIER_OTHER_DELIVERY);
+        var goBackButton = createButton("Назад", InlineKeyButton.GO_BACK_SELECT_CATEGORIES);
 
         List<List<InlineKeyboardButton>> rowsInLine =
                 createListButton(courierCategoryWalking, courierCategoryAuto, courierCategoryBuyAndDelivery,
-                        courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery);
+                        courierCategoryFoodDelivery, courierCategoryUrgentDelivery, courierCategoryOtherDelivery,
+                        goBackButton);
 
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
         return inlineKeyboardMarkup;
@@ -121,7 +123,7 @@ public class InlineKeyboardInitializer {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         var respondButton = createButton("Откликнуться", InlineKeyButton.RESPOND);
-        var commentButton = createButton("Отзывы заказчика", InlineKeyButton.SHOW_COMMENT);
+        var commentButton = createButton("Отзывы заказчика", InlineKeyButton.SHOW_COMMENT_CUSTOMER);
 
         List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton, commentButton);
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
@@ -141,7 +143,7 @@ public class InlineKeyboardInitializer {
         inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
         var respondButton = createButton("Связаться с исполнителем", InlineKeyButton.SEND_MESSAGE_EXECUTOR);
-        var commentButton = createButton("Отзывы исполнителя", InlineKeyButton.SHOW_COMMENT);
+        var commentButton = createButton("Отзывы исполнителя", InlineKeyButton.SHOW_COMMENT_EXECUTOR);
 
         List<List<InlineKeyboardButton>> rowsInLine = createListButton(respondButton, commentButton);
         inlineKeyboardMarkup.setKeyboard(rowsInLine);
@@ -160,6 +162,18 @@ public class InlineKeyboardInitializer {
         List<List<InlineKeyboardButton>> rowsLine = createListButton(editMail,
                 editPhoneNumber, resendTheMail, addLikeCategories);
         inlineKeyboardMarkup.setKeyboard(rowsLine);
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup initInlineKeyboardRespond() {
+        inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+        var selectExecutor = createButton("Выбрать исполнителя", InlineKeyButton.SELECT_EXECUTOR);
+        var commentExecutor = createButton("Посмотреть отзывы исполнителя", InlineKeyButton.SHOW_COMMENT_EXECUTOR);
+
+        List<List<InlineKeyboardButton>> rowLine = createListButton(selectExecutor, commentExecutor);
+
+        inlineKeyboardMarkup.setKeyboard(rowLine);
         return inlineKeyboardMarkup;
     }
 }

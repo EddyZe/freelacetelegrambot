@@ -1,7 +1,8 @@
-package com.example.freelacetelegrambot.comand;
+package com.example.freelacetelegrambot.command;
 
 import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.enums.Category;
+import com.example.freelacetelegrambot.enums.StatusOrder;
 import com.example.freelacetelegrambot.model.Order;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ public class SearchTaskCommand {
             String response = String.format(
                     """
                             Номер задания: %s.
+                            Заказчик: %s.
                             Название задания: %s.
                             Описание задания: %s.
                             Желаемая стоимость: %s
@@ -38,10 +40,11 @@ public class SearchTaskCommand {
                             Адрес: %s.\s
                             Создано: %s.
                             """,
-                    order.getId(), order.getName(), order.getDescription(), order.getPrice(),
+                    order.getId(), order.getCustomer().getName(), order.getName(), order.getDescription(), order.getPrice(),
                     order.getCategory().toString(),order.getStatus(), order.getOrderAddress(),
                     dtf.format(order.getCreatedAt()));
-            resultList.add(response);
+            if (order.getStatus() == StatusOrder.OPEN)
+                resultList.add(response);
         });
         return resultList;
     }

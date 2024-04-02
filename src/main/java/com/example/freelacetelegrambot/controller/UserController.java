@@ -2,6 +2,7 @@ package com.example.freelacetelegrambot.controller;
 
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.Role;
+import com.example.freelacetelegrambot.exception.UserNotFoundException;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.service.UserService;
 import org.springframework.stereotype.Controller;
@@ -27,7 +28,11 @@ public class UserController {
         userService.save(user);
     }
 
-    public Optional<User> findByChatId(long chatId) {
+    public User findByChatId(long chatId) {
+        return userService.findByChatId(chatId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+    }
+
+    public Optional<User> findByUserChatId (long chatId) {
         return userService.findByChatId(chatId);
     }
 

@@ -1,4 +1,4 @@
-package com.example.freelacetelegrambot.comand;
+package com.example.freelacetelegrambot.command;
 
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.exception.UserNotValidException;

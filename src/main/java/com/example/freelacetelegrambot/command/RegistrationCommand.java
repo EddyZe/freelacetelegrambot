@@ -1,4 +1,4 @@
-package com.example.freelacetelegrambot.comand;
+package com.example.freelacetelegrambot.command;
 
 
 import com.example.freelacetelegrambot.controller.UserController;
@@ -28,7 +28,7 @@ public class RegistrationCommand {
                     return "Введите номер телефона в формате: +79998887766";
                 userSingUpDTO.setPhoneNumber(text);
                 userSingUpDTO.setState(State.REGISTRATION_EMAIL);
-                return "Введите email";
+                return "Введите email: ";
             }
             case REGISTRATION_EMAIL -> {
                 if (!text.matches(email))
