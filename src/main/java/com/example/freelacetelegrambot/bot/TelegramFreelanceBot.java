@@ -34,6 +34,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final Map<Long, String> userCommand = new HashMap<>();
     private final Map<Long, UserSingUpDTO> userRegistration = new HashMap<>();
     private final Map<Long, Order> createdOrder = new HashMap<>();
+    private final Map<Long, User> cacheUser = new HashMap<>();
 
     private final ReplyKeyboardInitializer keyboardInitializer;
     private final InlineKeyboardInitializer inlineKeyboardInitializer;
@@ -97,7 +98,11 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 "Чтобы убрать ненужные категории, нажмите на нее повторно. \n\nВыбранные категори: \n");
 
         if (!userCommand.containsKey(chatId)) {
-            user = userController.findByChatId(chatId);
+            if (!cacheUser.containsKey(chatId)) {
+                user = userController.findByChatId(chatId);
+                cacheUser.put(chatId, user);
+            } else
+                user = cacheUser.get(chatId);
         }
 
         if (callBackData.equals(Category.COURIER.name())) {
