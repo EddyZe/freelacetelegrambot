@@ -5,7 +5,7 @@ import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
-import com.example.freelacetelegrambot.exception.UserInValidException;
+import com.example.freelacetelegrambot.exception.UserInvalidException;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -45,7 +45,7 @@ public class RegistrationCommand {
                             " нужно подтвердить email. Мы отправили вам письмо. " +
                             "Настройте профиль в разделе 'Настройки профиля' и выбирите любимые категории," +
                             " чтобы заказчик смог вас найти";
-                } catch (UserInValidException e) {
+                } catch (UserInvalidException e) {
                     return e.getMessage();
                 }
             }

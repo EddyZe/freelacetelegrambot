@@ -7,8 +7,8 @@ import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.*;
-import com.example.freelacetelegrambot.exception.OrderInValidException;
-import com.example.freelacetelegrambot.exception.UserInValidException;
+import com.example.freelacetelegrambot.exception.OrderInvalidException;
+import com.example.freelacetelegrambot.exception.UserInvalidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;
@@ -54,6 +54,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final SettingCommand settingCommand;
     private final EditEmailCommand editEmailCommand;
     private final EditPhoneNumberCommand editPhoneNumber;
+    private final OrderDoneCommand orderDoneCommand;
+    private final RejectionCommand rejectionCommand;
 
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
@@ -62,7 +64,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SelectExecutorCommand selectExecutorCommand, SearchTaskCommand searchTasksCommand,
                                 ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
-                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumberCommand editPhoneNumber) {
+                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumberCommand editPhoneNumber, OrderDoneCommand orderDoneCommand, RejectionCommand rejectionCommand) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
@@ -80,6 +82,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         this.settingCommand = settingCommand;
         this.editEmailCommand = editEmailCommand;
         this.editPhoneNumber = editPhoneNumber;
+        this.orderDoneCommand = orderDoneCommand;
+        this.rejectionCommand = rejectionCommand;
     }
 
     @Override
@@ -191,6 +195,11 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         } else if (callBackData.equals(InlineKeyButton.SELECT_EXECUTOR.name())) {
             selectExecutor(message, chatId);
 
+        } else if (callBackData.equals(InlineKeyButton.DONE.name())) {
+            doneOrder(message);
+
+        } else if (callBackData.equals(InlineKeyButton.REJECTION.name())){
+            rejectionExecutorOrOrder(message, chatId, user);
         } else
             sendMessage(chatId, "Пока что я не умею это", null);
     }
@@ -262,6 +271,29 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         }
     }
 
+    private void doneOrder(Message message) {
+        String orderId = getOrderIdFromMessage(message);
+        assert orderId != null;
+        try {
+            Map<Long, String> response = orderDoneCommand.execute(Long.parseLong(orderId));
+            for (Map.Entry<Long, String> map : response.entrySet()) {
+                sendMessage(map.getKey(), map.getValue(), null);
+            }
+        } catch (OrderInvalidException e) {
+            sendMessage(message.getChatId(), e.getMessage(), null);
+        }
+    }
+
+    private String getOrderIdFromMessage(Message message) {
+        String[] strings = message.getText().split("\n");
+        String orderId = null;
+        for (String str : strings) {
+            if (str.startsWith("Номер задания"))
+                orderId = str.split(":")[1].trim().replaceAll("\\.", "");
+        }
+        return orderId;
+    }
+
     private void editProfile(long chatId, String text, EditCommand command) {
         User user;
 
@@ -276,8 +308,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
 
         if (text.equalsIgnoreCase(Commands.CANCEL.toString())) {
-            sendMessage(chatId, "Вы отменили операцию", keyboardMarkup);
-            userCommand.remove(chatId);
+            cancel(chatId);
             return;
         }
 
@@ -285,7 +316,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             String response = command.execute(text, user);
             sendMessage(chatId, response, keyboardMarkup);
             userCommand.remove(chatId);
-        } catch (UserInValidException e) {
+        } catch (UserInvalidException e) {
             sendMessage(chatId, e.getMessage(), keyboardMarkup);
         }
     }
@@ -298,6 +329,20 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         } else {
             editMessage(message, chatId, command + "Выберите категорию: ",
                     inlineKeyboardInitializer.initInlineKeyboardSelectCategory());
+        }
+    }
+
+    private void rejectionExecutorOrOrder(Message message, long chatId, User user) {
+        String orderId = getOrderIdFromMessage(message);
+        assert orderId != null;
+        assert user != null;
+        try {
+            Map<Long, String> response = rejectionCommand.execute(Long.parseLong(orderId), user);
+            for (Map.Entry<Long, String> map : response.entrySet()) {
+                sendMessage(map.getKey(), map.getValue(), null);
+            }
+        } catch (OrderInvalidException e) {
+            sendMessage(chatId, e.getMessage(), null);
         }
     }
 
@@ -314,7 +359,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                     sendMessage(id.getKey(), msg.getKey(), msg.getValue());
                 }
             }
-        } catch (OrderInValidException e) {
+        } catch (OrderInvalidException e) {
             sendMessage(chatId, e.getMessage(), null);
         }
     }
@@ -382,9 +427,15 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             Order order = selectExecutorCommand.execute(message);
 
             String responseExecutor = "Вас выбрали исполнителем!\nНомер задачи: " + order.getId() +
-                    "\nНазвание задачи: " + order.getName();
+                    "\nНазвание задачи: " + order.getName() +
+                    "\nEmail заказчика: " + order.getCustomer().getEmail() +
+                    "\nНомер заказчика: " + order.getExecutor().getPhoneNumber();
             String responseCustomer = "Вы выбрали исполнителем: " + order.getExecutor().getName() +
-                    "\nНомер задачи: " + order.getId() + "\nНазвание задачи: " + order.getName();
+                    "\nНомер задачи: " + order.getId() +
+                    "\nНазвание задачи: " + order.getName() +
+                    "\nEmail исполнителя: " + order.getExecutor().getEmail() +
+                    "\nНомер изполнителя: " + order.getExecutor().getPhoneNumber() +
+                    "\nПосле выполнения, не забудь поставить статус выполнен!";
 
             sendMessage(order.getExecutor().getChatId(), responseExecutor,
                     inlineKeyboardInitializer.initInlineKeyboardMessageToCustomer());
@@ -561,7 +612,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             sendMessage(chatId, response, keyboardMarkup);
         } else {
             var chat = message.getChat();
-            var name = chat.getUserName() != null ? chat.getUserName() :
+            var name = chat.getUserName() != null ? "@" + chat.getUserName() :
                     chat.getFirstName();
             userSingUpDTO = UserSingUpDTO.builder()
                     .chatId(chatId)
@@ -610,19 +661,21 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
 
     private void cancel(long chatId) {
-        userCommand.remove(chatId);
 
         if (userRegistration.containsKey(chatId)) {
             userRegistration.remove(chatId);
+            userCommand.remove(chatId);
             sendMessage(chatId, "Вы отменили регистрацию",
                     keyboardInitializer.initKeyBoardStart());
-        }
-
-        if (createdOrder.containsKey(chatId)) {
+        } else if (createdOrder.containsKey(chatId)) {
             createdOrder.get(chatId).getCustomer().setState(State.BASIK);
             createdOrder.remove(chatId);
+            userCommand.remove(chatId);
             sendMessage(chatId, "Вы отменили создание задания.",
                     keyboardInitializer.initKeyBoardCustomer());
+        } else {
+            sendMessage(chatId, "Операция отменена", null);
+            userCommand.remove(chatId);
         }
     }
 

@@ -1,9 +1,9 @@
 package com.example.freelacetelegrambot.enums;
 
 public enum StatusOrder {
-    OPEN ("Открыт"),
-    DONE("Выполнен"),
-    IN_EXECUTION("В исполнении");
+    OPEN ("Открыт" + new String(Character.toChars(0x231B))),
+    CLOSE("Выполнен" + new String(Character.toChars(0x2705))),
+    IN_EXECUTION("В исполнении"  + new String(Character.toChars(0x267B)));
 
     private final String cmd;
 
@@ -14,10 +14,5 @@ public enum StatusOrder {
     @Override
     public String toString() {
         return cmd;
-    }
-
-
-    public boolean equals(String cmd) {
-        return this.toString().equals(cmd);
     }
 }

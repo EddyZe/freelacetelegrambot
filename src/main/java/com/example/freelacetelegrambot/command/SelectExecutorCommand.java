@@ -3,7 +3,7 @@ package com.example.freelacetelegrambot.command;
 import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.enums.StatusOrder;
-import com.example.freelacetelegrambot.exception.OrderInValidException;
+import com.example.freelacetelegrambot.exception.OrderInvalidException;
 import com.example.freelacetelegrambot.exception.UserNotFoundException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
@@ -38,7 +38,7 @@ public class SelectExecutorCommand {
                 .orElseThrow(()-> new UserNotFoundException("Исполнитель не найден. Возможно он еще не зарегистрирован!"));
 
         if (order.getExecutor() != null)
-            throw new OrderInValidException("Вы уже выбрали исполнителя на эту задачу!");
+            throw new OrderInvalidException("Вы уже выбрали исполнителя на эту задачу!");
 
         order.setExecutor(user);
         order.setStatus(StatusOrder.IN_EXECUTION);

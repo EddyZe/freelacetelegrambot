@@ -2,7 +2,6 @@ package com.example.freelacetelegrambot.command;
 
 
 import com.example.freelacetelegrambot.controller.OrderController;
-import com.example.freelacetelegrambot.exception.OrderInValidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;

@@ -29,8 +29,10 @@ public class ReplyKeyboardInitializer {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         row.add(Commands.CREATE_TASK.toString());
-        row.add(Commands.SEARCH_EXECUTOR.toString());
         row.add(Commands.SETTING.toString());
+        keyboardRows.add(row);
+        row = new KeyboardRow();
+        row.add(Commands.SEARCH_EXECUTOR.toString());
         keyboardRows.add(row);
         return getDefaultReplyKeyboardMarkup(keyboardRows);
     }

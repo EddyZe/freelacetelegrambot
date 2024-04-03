@@ -2,7 +2,6 @@ package com.example.freelacetelegrambot.model;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +24,6 @@ public class Comment {
     @Column(name = "id")
     private long id;
 
-    @NotEmpty(message = "Комментарий не может быть пустым!")
     @Column(name = "text")
     private String text;
 

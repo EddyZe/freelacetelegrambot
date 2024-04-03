@@ -3,7 +3,7 @@ package com.example.freelacetelegrambot.service;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
-import com.example.freelacetelegrambot.exception.UserInValidException;
+import com.example.freelacetelegrambot.exception.UserInvalidException;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.repository.CommentRepository;
 import com.example.freelacetelegrambot.repository.UserRepository;
@@ -41,10 +41,10 @@ public class UserService {
 
     public void registration (UserSingUpDTO userSingUpDTO) {
         if (userRepository.findByEmail(userSingUpDTO.getEmail()).isPresent())
-            throw new UserInValidException("Такой email занят! Повторите попытку");
+            throw new UserInvalidException("Такой email занят! Повторите попытку");
         if (userRepository.findByPhoneNumber(userSingUpDTO.getPhoneNumber()).isPresent()) {
             userSingUpDTO.setState(State.REGISTRATION_PHONE_NUMBER);
-            throw new UserInValidException("Такой номер телефона занят! Повторите попытку");
+            throw new UserInvalidException("Такой номер телефона занят! Повторите попытку");
         }
         User user = convertToCustomer(userSingUpDTO);
         user.setName(userSingUpDTO.getName());
