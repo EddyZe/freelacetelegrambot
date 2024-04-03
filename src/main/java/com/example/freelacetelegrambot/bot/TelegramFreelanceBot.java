@@ -7,6 +7,7 @@ import com.example.freelacetelegrambot.controller.OrderController;
 import com.example.freelacetelegrambot.controller.UserController;
 import com.example.freelacetelegrambot.dto.UserSingUpDTO;
 import com.example.freelacetelegrambot.enums.*;
+import com.example.freelacetelegrambot.exception.OrderInValidException;
 import com.example.freelacetelegrambot.exception.UserInValidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
@@ -43,6 +44,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final UserController userController;
 
     private final RegistrationCommand registrationCommand;
+    private final RespondOrderCommand respondOrderCommand;
     private final SelectExecutorCommand selectExecutorCommand;
     private final DeleteOrderCommand deleteOrderCommand;
     private final SearchTaskCommand searchTasksCommand;
@@ -56,7 +58,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
                                 @Value("${telegram.bot.username}") String botUserName,
-                                ReplyKeyboardInitializer keyboardInitializer, DeleteOrderCommand deleteOrderCommand, CreateTaskCommand createTaskCommand,
+                                ReplyKeyboardInitializer keyboardInitializer, RespondOrderCommand respondOrderCommand, DeleteOrderCommand deleteOrderCommand, CreateTaskCommand createTaskCommand,
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SelectExecutorCommand selectExecutorCommand, SearchTaskCommand searchTasksCommand,
                                 ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
@@ -64,6 +66,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
+        this.respondOrderCommand = respondOrderCommand;
         this.deleteOrderCommand = deleteOrderCommand;
         this.createTaskCommand = createTaskCommand;
         this.orderController = orderController;
@@ -104,8 +107,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             if (!cacheUser.containsKey(chatId)) {
                 user = userController.findByChatId(chatId);
                 cacheUser.put(chatId, user);
-            } else
-                user = cacheUser.get(chatId);
+            }
+            user = cacheUser.get(chatId);
         }
 
         if (callBackData.equals(Category.COURIER.name())) {
@@ -237,8 +240,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 if (!cacheUser.containsKey(chatId)) {
                     user = userController.findByChatId(chatId);
                     cacheUser.put(chatId, user);
-                } else
-                    user = cacheUser.get(chatId);
+                }
+                user = cacheUser.get(chatId);
 
                 assert user != null;
                 String response = settingCommand.execute(user);
@@ -265,8 +268,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         if (!cacheUser.containsKey(chatId)) {
             user = userController.findByChatId(chatId);
             cacheUser.put(chatId, user);
-        } else
-            user = cacheUser.get(chatId);
+        }
+        user = cacheUser.get(chatId);
 
         assert user != null;
         ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
@@ -300,41 +303,24 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void respondOnOrder(Message message, long chatId, User user) {
         assert user != null;
-        if(!checkAccountActive(chatId, user))
+        if (!checkAccountActive(chatId, user))
             return;
 
-        long orderId = Long.parseLong(message.getText().split("\\.")[0].split(":")[1].trim());
-        Order order = orderController.findById(orderId);
-        long chatIdCustomer = order.getCustomer().getChatId();
+        try {
+            Map<Long, Map<String, ReplyKeyboard>> response = respondOrderCommand.execute(message, user);
 
-//        if (chatId == chatIdCustomer) {
-//            sendMessage(chatId, "Вы не можете отправить отклик себе!",
-//                    keyboardInitializer.initKeyBoardExecutor());
-//            return;
-//        }
-
-        String responseExecutor = """ 
-                        Вы откликнулись. Ждите ответа заказчика.
-                        Если вас выберут, то мы пришлем данные заказчика. И вам будет доступен чат внутри бота.""";
-        sendMessage(chatId, responseExecutor,
-                keyboardInitializer.initKeyBoardExecutor());
-        String responseCustomer = String.format("""
-                Пришел отклик на ваш заказ.
-                
-                Номер задачи: %s
-                Название задачи: %s.
-                Описание задачи: %s.
-                Желаемая цена: %s
-                
-                Откликнулся(-ась): %s
-                Email: %s;""", order.getId(), order.getName(), order.getDescription(), order.getPrice(),
-                user.getName(), user.getEmail());
-        sendMessage(chatIdCustomer, responseCustomer,
-                inlineKeyboardInitializer.initInlineKeyboardRespond());
+            for (Map.Entry<Long, Map<String, ReplyKeyboard>> id : response.entrySet()) {
+                for (Map.Entry<String, ReplyKeyboard> msg : id.getValue().entrySet()) {
+                    sendMessage(id.getKey(), msg.getKey(), msg.getValue());
+                }
+            }
+        } catch (OrderInValidException e) {
+            sendMessage(chatId, e.getMessage(), null);
+        }
     }
 
     private void choosingCategory(Message message, long chatId, User user,
-                                                StringBuilder selectCategory, String text, Category category) {
+                                  StringBuilder selectCategory, String text, Category category) {
         String command;
         if (userCommand.containsKey(chatId) && userCommand.get(chatId).equals(Commands.CREATE_TASK.toString())) {
 
@@ -449,8 +435,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         if (!cacheUser.containsKey(chatId)) {
             user = userController.findByChatId(chatId);
             cacheUser.put(chatId, user);
-        } else
-            user = cacheUser.get(chatId);
+        }
+        user = cacheUser.get(chatId);
 
         switch (user.getRole()) {
             case CUSTOMER -> {
@@ -481,8 +467,8 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         if (!cacheUser.containsKey(chatId)) {
             user = userController.findByChatId(chatId);
             cacheUser.put(chatId, user);
-        } else
-            user = cacheUser.get(chatId);
+        }
+        user = cacheUser.get(chatId);
         generateOrder(chatId, text, user);
     }
 
@@ -535,7 +521,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             sendMessage(chatId, response, keyboardMarkup);
         } else {
             Optional<User> optionalUser = userController.findByUserChatId(chatId);
-            if(optionalUser.isEmpty()) {
+            if (optionalUser.isEmpty()) {
                 registration(message, text, role);
                 return;
             }

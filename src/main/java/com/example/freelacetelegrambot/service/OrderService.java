@@ -45,7 +45,7 @@ public class OrderService {
         if (order.isEmpty())
             throw new OrderNotFoundException("Заказ с таким id не найден");
         if (order.get().getExecutor() != null)
-            return "Вы не можете удалить задание. Т.к выбран исполнитель!";
+            return "Вы не можете удалить задание, т.к выбран исполнитель!";
         orderRepository.deleteById(id);
         return "Заказ удален";
     }

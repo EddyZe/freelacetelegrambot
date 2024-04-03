@@ -18,6 +18,6 @@ public class DeleteOrderCommand {
         String orderId = message.getText().split("\n")[0]
                 .split(":")[1]
                 .replace(".", "");
-        return orderController.deleteById(Long.parseLong(orderId));
+        return orderController.deleteById(Long.parseLong(orderId.trim()));
     }
 }
