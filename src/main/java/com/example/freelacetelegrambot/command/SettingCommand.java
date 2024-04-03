@@ -1,5 +1,6 @@
 package com.example.freelacetelegrambot.command;
 
+import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.model.User;
 import org.springframework.stereotype.Component;
 
@@ -23,5 +24,18 @@ public class SettingCommand {
                         Ваши избранные категории:
                         %s
                         """, user.getEmail(), user.getPhoneNumber(), userCategories);
+    }
+
+    public void addCategoryInSearchList(User user, Category category,
+                                         StringBuilder selectCategory) {
+        if (user.getLikeCategories().contains(category))
+            user.getLikeCategories().remove(category);
+        else
+            user.getLikeCategories().add(category);
+
+        user.getLikeCategories().forEach(c ->
+                selectCategory.append("-")
+                        .append(c.toString())
+                        .append(" \n"));
     }
 }

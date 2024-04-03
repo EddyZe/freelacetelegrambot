@@ -40,11 +40,18 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public void deleteById(long id) {
+    public String deleteById(long id) {
         Optional<Order> order = orderRepository.findById(id);
         if (order.isEmpty())
             throw new OrderNotFoundException("Заказ с таким id не найден");
+        if (order.get().getExecutor() != null)
+            return "Вы не можете удалить задание. Т.к выбран исполнитель!";
         orderRepository.deleteById(id);
+        return "Заказ удален";
+    }
+
+    public void save(Order order) {
+        orderRepository.save(order);
     }
 
     public List<Order> findByCategory(Category category) {

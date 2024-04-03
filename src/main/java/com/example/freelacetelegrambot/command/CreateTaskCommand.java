@@ -2,6 +2,7 @@ package com.example.freelacetelegrambot.command;
 
 
 import com.example.freelacetelegrambot.controller.OrderController;
+import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.enums.State;
 import com.example.freelacetelegrambot.enums.StatusOrder;
 import com.example.freelacetelegrambot.model.Order;
@@ -9,6 +10,7 @@ import com.example.freelacetelegrambot.model.User;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Component
 public class CreateTaskCommand {
@@ -55,5 +57,12 @@ public class CreateTaskCommand {
                 return "Что-то пошло не так.";
             }
         }
+    }
+
+    public void selectCategory(long chatId, Category category, Map<Long, Order> createdOrder) {
+        Order order = createdOrder.get(chatId);
+        order.setCategory(category);
+        User user = order.getCustomer();
+        user.setState(State.CREATE_TASK_ADDRESS);
     }
 }

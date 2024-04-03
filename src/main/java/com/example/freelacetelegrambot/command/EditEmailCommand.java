@@ -1,7 +1,7 @@
 package com.example.freelacetelegrambot.command;
 
 import com.example.freelacetelegrambot.controller.UserController;
-import com.example.freelacetelegrambot.exception.UserNotValidException;
+import com.example.freelacetelegrambot.exception.UserInValidException;
 import com.example.freelacetelegrambot.model.User;
 import org.springframework.stereotype.Component;
 
@@ -19,11 +19,11 @@ public class EditEmailCommand implements EditCommand {
         String email = "^\\S+@\\S+\\.\\S+$";
 
         if(!text.matches(email)) {
-            throw new UserNotValidException("Не корректный email. Попробуйте снова");
+            throw new UserInValidException("Не корректный email. Попробуйте снова");
         }
 
         if (userController.findByEmail(text).isPresent())
-            throw new UserNotValidException("Такой email уже занят");
+            throw new UserInValidException("Такой email уже занят");
 
         user.setEmail(text);
         userController.save(user);

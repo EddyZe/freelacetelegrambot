@@ -41,7 +41,11 @@ public class OrderController {
         return orderService.findByCategory(category);
     }
 
-    public void deleteById(long id) {
-        orderService.deleteById(id);
+    public void save(Order order) {
+        orderService.save(order);
+    }
+
+    public String deleteById(long id) {
+        return orderService.deleteById(id);
     }
 }
