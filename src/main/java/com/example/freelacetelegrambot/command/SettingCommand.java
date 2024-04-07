@@ -19,7 +19,7 @@ public class SettingCommand {
         return String.format("""
                         Настройки профиля.
                         
-                        Ваш email: %s.
+                        Email: %s.
                         Ваш номер телефона: %s.
                         Ваши избранные категории:
                         %s

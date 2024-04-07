@@ -11,13 +11,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MailService {
+
     private final JavaMailSender javaMailSender;
     private final UserRepository userRepository;
 
     @Value("${spring.mail.username}")
     private String emailFrom;
 
-    @Value("${http://localhost:8080/mail/acivation?id={id}}")
+    @Value("${service.activation.url}")
     private String activationUri;
 
     public MailService(JavaMailSender javaMailSender, UserRepository userRepository) {

@@ -18,11 +18,10 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final CommentRepository commentRepository;
     private final ModelMapper modelMapper;
-    public UserService(UserRepository userRepository, CommentRepository commentRepository, ModelMapper modelMapper) {
+    private MailService mailService;
+    public UserService(UserRepository userRepository, ModelMapper modelMapper) {
         this.userRepository = userRepository;
-        this.commentRepository = commentRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -48,9 +47,10 @@ public class UserService {
         }
         User user = convertToCustomer(userSingUpDTO);
         user.setName(userSingUpDTO.getName());
-        user.setState(State.BASIK); //TODO Изменить на NON_ACTIVE и настроить mailService
+        user.setState(State.NOT_ACTIVE_ACCOUNT);
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
+        mailService.sendEmail(user.getId());
     }
 
     public void save(User user) {

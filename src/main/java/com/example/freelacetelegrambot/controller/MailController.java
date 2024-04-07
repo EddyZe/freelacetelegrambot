@@ -4,10 +4,7 @@ package com.example.freelacetelegrambot.controller;
 import com.example.freelacetelegrambot.service.MailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/mail")
 @RestController
@@ -19,9 +16,15 @@ public class MailController {
         this.mailService = mailService;
     }
 
-    @PostMapping("${service.activation.url}")
+    @GetMapping("/activation/{id}")
     public ResponseEntity<HttpStatus> activation(@PathVariable("id") long id) {
+        System.out.println(id);
         mailService.activation(id);
         return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @GetMapping("/")
+    public String getPage() {
+        return "Привет";
     }
 }

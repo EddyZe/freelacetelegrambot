@@ -11,6 +11,7 @@ import com.example.freelacetelegrambot.exception.OrderInvalidException;
 import com.example.freelacetelegrambot.exception.UserInvalidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
+import com.example.freelacetelegrambot.service.MailService;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;
 import com.example.freelacetelegrambot.util.MessageHelper;
 import com.example.freelacetelegrambot.util.ReplyKeyboardInitializer;
@@ -36,7 +37,6 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final Map<Long, String> userCommand = new HashMap<>();
     private final Map<Long, UserSingUpDTO> userRegistration = new HashMap<>();
     private final Map<Long, Order> createdOrder = new HashMap<>();
-    private final Map<Long, User> cacheUser = new HashMap<>();
     private final Map<Long, Message> createComment = new HashMap<>();
     private final Map<Long, Message> createMessage = new HashMap<>();
 
@@ -45,6 +45,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private final OrderController orderController;
     private final UserController userController;
+    private final MailService mailService;
 
     private final RegistrationCommand registrationCommand;
     private final RespondOrderCommand respondOrderCommand;
@@ -66,7 +67,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
                                 @Value("${telegram.bot.username}") String botUserName,
-                                ReplyKeyboardInitializer keyboardInitializer, RespondOrderCommand respondOrderCommand, DeleteOrderCommand deleteOrderCommand, CreateTaskCommand createTaskCommand,
+                                ReplyKeyboardInitializer keyboardInitializer, MailService mailService, RespondOrderCommand respondOrderCommand, DeleteOrderCommand deleteOrderCommand, CreateTaskCommand createTaskCommand,
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SelectExecutorCommand selectExecutorCommand, SearchTaskCommand searchTasksCommand,
                                 ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
@@ -74,6 +75,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
+        this.mailService = mailService;
         this.respondOrderCommand = respondOrderCommand;
         this.deleteOrderCommand = deleteOrderCommand;
         this.createTaskCommand = createTaskCommand;
@@ -118,11 +120,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 "Чтобы убрать ненужные категории, нажмите на нее повторно. \n\nВыбранные категори: \n");
 
         if (!userCommand.containsKey(chatId)) {
-            if (!cacheUser.containsKey(chatId)) {
-                user = userController.findByChatId(chatId);
-                cacheUser.put(chatId, user);
-            }
-            user = cacheUser.get(chatId);
+            user = userController.findByChatId(chatId);
         }
 
         if (callBackData.equals(Category.COURIER.name())) {
@@ -246,6 +244,10 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             userCommand.put(chatId, InlineKeyButton.SEND_MESSAGE_EXECUTOR.name());
             createMessage.put(chatId, message);
             sendMessage(chatId, "Введите сообщение:\nДля отмены операции введите 'отмена'", null);
+        } else if (callBackData.equals(InlineKeyButton.RESEND_MAIL.name())) {
+            assert user != null;
+            mailService.sendEmail(user.getId());
+            sendMessage(chatId, "Мы отправили вам письмо. Проверте почту!", null);
         } else
             sendMessage(chatId, "Пока что я не умею это", null);
     }
@@ -292,11 +294,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             } else if (text.equals(Commands.SETTING.toString())) {
                 User user;
 
-                if (!cacheUser.containsKey(chatId)) {
-                    user = userController.findByChatId(chatId);
-                    cacheUser.put(chatId, user);
-                }
-                user = cacheUser.get(chatId);
+                user = userController.findByChatId(chatId);
 
                 assert user != null;
                 String response = settingCommand.execute(user);
@@ -326,14 +324,16 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             } else if (text.equalsIgnoreCase(Commands.MY_COMMENTS.toString())) {
                 showMyComment(chatId);
 
-            } else if(userCommand.containsKey(chatId) &&
+            } else if (userCommand.containsKey(chatId) &&
                     userCommand.get(chatId).equals(InlineKeyButton.SEND_MESSAGE_CUSTOMER.name())) {
 
-                sendMessageCustomerOrExecutor(createMessage.get( chatId), text, Role.CUSTOMER);
+                sendMessageCustomerOrExecutor(createMessage.get(chatId), text, Role.CUSTOMER);
 
-            } else if(userCommand.containsKey(chatId) &&
-                    userCommand.get(chatId).equals(InlineKeyButton.SEND_MESSAGE_EXECUTOR.name())){
+            } else if (userCommand.containsKey(chatId) &&
+                    userCommand.get(chatId).equals(InlineKeyButton.SEND_MESSAGE_EXECUTOR.name())) {
+
                 sendMessageCustomerOrExecutor(createMessage.get(chatId), text, Role.EXECUTOR);
+
             } else {
                 sendMessage(chatId, "Пока что я не умею это", null);
             }
@@ -403,12 +403,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void editProfile(long chatId, String text, EditCommand command) {
         User user;
-
-        if (!cacheUser.containsKey(chatId)) {
-            user = userController.findByChatId(chatId);
-            cacheUser.put(chatId, user);
-        }
-        user = cacheUser.get(chatId);
+        user = userController.findByChatId(chatId);
 
         assert user != null;
         ReplyKeyboardMarkup keyboardMarkup = user.getRole() == Role.CUSTOMER ?
@@ -455,7 +450,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void respondOnOrder(Message message, long chatId, User user) {
         assert user != null;
-        if (!checkAccountActive(chatId, user))
+        if (checkAccountActive(chatId, user))
             return;
 
         try {
@@ -592,12 +587,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void showMyOrdersOrTask(long chatId) {
         User user;
-
-        if (!cacheUser.containsKey(chatId)) {
-            user = userController.findByChatId(chatId);
-            cacheUser.put(chatId, user);
-        }
-        user = cacheUser.get(chatId);
+        user = userController.findByChatId(chatId);;
 
         switch (user.getRole()) {
             case CUSTOMER -> {
@@ -625,11 +615,9 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void createOrder(long chatId, String text) {
         User user;
-        if (!cacheUser.containsKey(chatId)) {
-            user = userController.findByChatId(chatId);
-            cacheUser.put(chatId, user);
-        }
-        user = cacheUser.get(chatId);
+        user = userController.findByChatId(chatId);
+        if (checkAccountActive(chatId, user))
+            return;
         generateOrder(chatId, text, user);
     }
 
@@ -668,11 +656,10 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
     private void authorization(Message message, String text, Role role) {
         long chatId = message.getChatId();
-        User user;
-        if (cacheUser.containsKey(chatId)) {
-            user = cacheUser.get(chatId);
-            user.setRole(role);
-            userController.save(user);
+        Optional<User> user = userController.findByUserChatId(chatId);
+        if (user.isPresent()) {
+            user.get().setRole(role);
+            userController.save(user.get());
 
             String response = role == Role.CUSTOMER ? "Вы вошли как заказчик" : "Вы вошли как исполнитель";
 
@@ -686,7 +673,6 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                 registration(message, text, role);
                 return;
             }
-            cacheUser.put(chatId, optionalUser.get());
             authorization(message, text, role);
         }
     }
@@ -698,9 +684,9 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             ReplyKeyboardMarkup replyKeyboardMarkup = user.getRole() == Role.CUSTOMER ?
                     keyboardInitializer.initKeyBoardCustomer() : keyboardInitializer.initKeyBoardExecutor();
             sendMessage(chatId, response, replyKeyboardMarkup);
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     private void registration(Message message, String text, Role role) {
@@ -776,17 +762,14 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             userRegistration.remove(chatId);
             sendMessage(chatId, "Вы отменили регистрацию",
                     keyboardInitializer.initKeyBoardStart());
-        }
-        else if (createdOrder.containsKey(chatId)) {
+        } else if (createdOrder.containsKey(chatId)) {
             createdOrder.get(chatId).getCustomer().setState(State.BASIK);
             createdOrder.remove(chatId);
             sendMessage(chatId, "Операция отменена", null);
-        }
-        else if(createComment.containsKey(chatId)) {
+        } else if (createComment.containsKey(chatId)) {
             createComment.remove(chatId);
             sendMessage(chatId, "Операция отменена", null);
-        }
-        else if (createMessage.containsKey(chatId)) {
+        } else if (createMessage.containsKey(chatId)) {
             createMessage.remove(chatId);
             sendMessage(chatId, "Операция отменена", null);
         }

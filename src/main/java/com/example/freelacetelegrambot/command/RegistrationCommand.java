@@ -36,7 +36,7 @@ public class RegistrationCommand {
                 userSingUpDTO.setEmail(text);
                 try {
                     userController.registration(userSingUpDTO);
-                    userSingUpDTO.setState(State.BASIK);
+                    userSingUpDTO.setState(State.NOT_ACTIVE_ACCOUNT);
                     return userSingUpDTO.getRole() == Role.CUSTOMER ?
                             "Вы прошли регистрацию. Для того, чтобы пользоваться сервисом," +
                             " нужно подтвердить email. Мы отправили вам письмо" :
