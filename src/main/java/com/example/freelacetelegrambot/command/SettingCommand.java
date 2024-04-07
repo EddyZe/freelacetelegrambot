@@ -17,22 +17,21 @@ public class SettingCommand {
                             .append("\n"));
         }
         return String.format("""
-                        Настройки профиля.
-                        
-                        Email: %s.
-                        Ваш номер телефона: %s.
-                        Ваши избранные категории:
-                        %s
-                        """, user.getEmail(), user.getPhoneNumber(), userCategories);
+                Настройки профиля.
+                                        
+                Email: %s.
+                Ваш номер телефона: %s.
+                Ваши избранные категории:
+                %s
+                """, user.getEmail(), user.getPhoneNumber(), userCategories);
     }
 
     public void addCategoryInSearchList(User user, Category category,
-                                         StringBuilder selectCategory) {
+                                        StringBuilder selectCategory) {
         if (user.getLikeCategories().contains(category))
             user.getLikeCategories().remove(category);
         else
             user.getLikeCategories().add(category);
-
         user.getLikeCategories().forEach(c ->
                 selectCategory.append("-")
                         .append(c.toString())

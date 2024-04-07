@@ -112,7 +112,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     }
 
     private void checkedCallBackQuery(Message message, long chatId, String callBackData) {
-        User user = null;
+        User user = userController.findByChatId(chatId);
 
         String selectedCategory = "Вы выбрали подкатегорию - '%s'." +
                 " Введите адрес где нужно выполнить задачу.";
@@ -481,11 +481,15 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         command = message.getText().split("\n\n")[0] + "\n\n";
 
         if (command.startsWith("Настройки профиля")) {
+            if (user.getLikeCategories() == null)
+                user.setLikeCategories(new ArrayList<>());
             settingCommand.addCategoryInSearchList(user, category, selectCategory);
             String response = settingCommand.execute(user);
             editMessage(message, chatId, response,
                     inlineKeyboardInitializer.initInlineKeyboardAddLikeSubCategoriesCourier());
         } else {
+            if (user.getLikeCategories() == null)
+                user.setLikeCategories(new ArrayList<>());
             settingCommand.addCategoryInSearchList(user, category, selectCategory);
             editMessage(message, chatId, command + selectCategory,
                     inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
@@ -517,12 +521,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
                 Выбранные категории:\s
                 """);
-
-        user.getLikeCategories().forEach(category ->
-                response.append("-")
-                        .append(category)
-                        .append("\n"));
-
+        if (user.getLikeCategories() != null) {
+            user.getLikeCategories().forEach(category ->
+                    response.append("-")
+                            .append(category)
+                            .append("\n"));
+        }
         editMessage(message, chatId, command + response,
                 inlineKeyboardInitializer.inlineKeyboardMarkupSelectCategoryCourier());
     }
@@ -531,12 +535,12 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         try {
             Order order = selectExecutorCommand.execute(message);
 
-            String responseExecutor = "Вас выбрали исполнителем!\nНомер задачи: " + order.getId() +
+            String responseExecutor = "Вас выбрали исполнителем!\nНомер задания: " + order.getId() +
                     "\nНазвание задачи: " + order.getName() +
                     "\nEmail заказчика: " + order.getCustomer().getEmail() +
                     "\nНомер заказчика: " + order.getExecutor().getPhoneNumber();
             String responseCustomer = "Вы выбрали исполнителем: " + order.getExecutor().getName() +
-                    "\nНомер задачи: " + order.getId() +
+                    "\nНомер задания: " + order.getId() +
                     "\nНазвание задачи: " + order.getName() +
                     "\nEmail исполнителя: " + order.getExecutor().getEmail() +
                     "\nНомер изполнителя: " + order.getExecutor().getPhoneNumber() +
@@ -668,12 +672,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
             sendMessage(chatId, response, keyboardMarkup);
         } else {
-            Optional<User> optionalUser = userController.findByUserChatId(chatId);
-            if (optionalUser.isEmpty()) {
-                registration(message, text, role);
-                return;
-            }
-            authorization(message, text, role);
+            registration(message, text, role);
         }
     }
 
@@ -699,7 +698,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             ReplyKeyboardMarkup keyboardMarkup = keyboardInitializer.initKeyBoardStart();
             userSingUpDTO = userRegistration.get(chatId);
             String response = registrationCommand.execute(text, userSingUpDTO);
-            if (userSingUpDTO.getState() == State.BASIK) {
+            if (userSingUpDTO.getState() == State.NOT_ACTIVE_ACCOUNT || userSingUpDTO.getState() == State.BASIK) {
                 userRegistration.remove(chatId);
                 userCommand.remove(chatId);
                 keyboardMarkup = role == Role.CUSTOMER ?

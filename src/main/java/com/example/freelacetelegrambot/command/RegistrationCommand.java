@@ -33,10 +33,10 @@ public class RegistrationCommand {
             case REGISTRATION_EMAIL -> {
                 if (!text.matches(email))
                     return "Не коректный email. Попробуйте снова.";
-                userSingUpDTO.setEmail(text);
                 try {
-                    userController.registration(userSingUpDTO);
+                    userSingUpDTO.setEmail(text);
                     userSingUpDTO.setState(State.NOT_ACTIVE_ACCOUNT);
+                    userController.registration(userSingUpDTO);
                     return userSingUpDTO.getRole() == Role.CUSTOMER ?
                             "Вы прошли регистрацию. Для того, чтобы пользоваться сервисом," +
                             " нужно подтвердить email. Мы отправили вам письмо" :

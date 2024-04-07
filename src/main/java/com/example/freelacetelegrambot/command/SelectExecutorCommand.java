@@ -27,7 +27,7 @@ public class SelectExecutorCommand {
         Long orderId = null;
         String emailExecutor = null;
         for (String s : strings) {
-            if (s.startsWith("Номер задачи"))
+            if (s.startsWith("Номер задания"))
                 orderId = Long.parseLong(s.trim().split(":")[1].trim());
             if (s.startsWith("Email")) {
                 emailExecutor = s.trim().split(":")[1].trim();

@@ -19,10 +19,11 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private MailService mailService;
-    public UserService(UserRepository userRepository, ModelMapper modelMapper) {
+    private final MailService mailService;
+    public UserService(UserRepository userRepository, ModelMapper modelMapper, MailService mailService) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+        this.mailService = mailService;
     }
 
 
@@ -46,10 +47,7 @@ public class UserService {
             throw new UserInvalidException("Такой номер телефона занят! Повторите попытку");
         }
         User user = convertToCustomer(userSingUpDTO);
-        user.setName(userSingUpDTO.getName());
-        user.setState(State.NOT_ACTIVE_ACCOUNT);
-        user.setCreatedAt(LocalDateTime.now());
-        userRepository.save(user);
+        user = userRepository.save(user);
         mailService.sendEmail(user.getId());
     }
 
@@ -67,6 +65,14 @@ public class UserService {
 
 
     private User convertToCustomer(UserSingUpDTO userSingUpDTO) {
-        return modelMapper.map(userSingUpDTO, User.class);
+        return User.builder()
+                .chatId(userSingUpDTO.getChatId())
+                .name(userSingUpDTO.getName())
+                .createdAt(LocalDateTime.now())
+                .state(userSingUpDTO.getState())
+                .phoneNumber(userSingUpDTO.getPhoneNumber())
+                .email(userSingUpDTO.getEmail())
+                .role(userSingUpDTO.getRole())
+                .build();
     }
 }

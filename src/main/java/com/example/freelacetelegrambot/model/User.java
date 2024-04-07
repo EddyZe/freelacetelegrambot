@@ -4,10 +4,7 @@ import com.example.freelacetelegrambot.enums.Category;
 import com.example.freelacetelegrambot.enums.Role;
 import com.example.freelacetelegrambot.enums.State;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -20,6 +17,7 @@ import java.util.*;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -47,13 +45,13 @@ public class User {
     private State state;
 
     @OneToMany(mappedBy = "customer")
-    private List<Order> orders;
+    private List<Order> orders = new ArrayList<>();
 
     @Column(name = "like_category")
     private List<Category> likeCategories = new ArrayList<>();
 
     @OneToMany(mappedBy = "recipient")
-    private List<Comment> comments;
+    private List<Comment> comments = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

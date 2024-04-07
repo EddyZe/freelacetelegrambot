@@ -43,7 +43,7 @@ public class RespondOrderCommand {
         String responseCustomer = String.format("""
                 Пришел отклик на ваш заказ.
                 
-                Номер задачи: %s
+                Номер задания: %s
                 Название задачи: %s.
                 Описание задачи: %s.
                 Желаемая цена: %s

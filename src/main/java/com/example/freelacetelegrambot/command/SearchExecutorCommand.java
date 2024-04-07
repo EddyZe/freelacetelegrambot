@@ -57,6 +57,8 @@ public class SearchExecutorCommand {
         List<User> executors = userController.findByRole(role);
         Set<User> resultList = new HashSet<>();
         for (User user : executors) {
+            if (user.getLikeCategories() == null)
+                user.setLikeCategories(new ArrayList<>());
             if (user.getLikeCategories().isEmpty()) {
                 resultList.add(user);
                 continue;
