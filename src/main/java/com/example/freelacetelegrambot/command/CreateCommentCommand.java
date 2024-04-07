@@ -30,12 +30,11 @@ public class CreateCommentCommand {
     public Map<Long, String> execute(Message message, String text, Role role) {
         Map<Long, String> result = new HashMap<>();
         switch (role) {
-            case CUSTOMER -> {
+            case CUSTOMER ->
                 sendCommentCustomer(message, text, result);
-            }
-            case EXECUTOR -> {
+
+            case EXECUTOR ->
                 sendCommentExecutor(message, text, result);
-            }
         }
 
         return result;
