@@ -52,6 +52,9 @@ public class User {
     @Column(name = "like_category")
     private List<Category> likeCategories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "recipient")
+    private List<Comment> comments;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

@@ -29,8 +29,10 @@ public class SelectExecutorCommand {
         for (String s : strings) {
             if (s.startsWith("Номер задачи"))
                 orderId = Long.parseLong(s.trim().split(":")[1].trim());
-            if (s.startsWith("Email"))
-                emailExecutor = s.trim().split(":")[1].trim().replace(";", "");
+            if (s.startsWith("Email")) {
+                emailExecutor = s.trim().split(":")[1].trim();
+                emailExecutor = emailExecutor.substring(0, emailExecutor.length()-1);
+            }
         }
         assert orderId != null;
         Order order = orderController.findById(orderId);

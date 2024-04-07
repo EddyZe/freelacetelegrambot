@@ -48,7 +48,7 @@ public class RespondOrderCommand {
                 Желаемая цена: %s
                 
                 Откликнулся(-ась): %s
-                Email: %s;""", order.getId(), order.getName(), order.getDescription(), order.getPrice(),
+                Email: %s.""", order.getId(), order.getName(), order.getDescription(), order.getPrice(),
                 user.getName(), user.getEmail());
         resultMap.put(chatIdCustomer, Map.of(responseCustomer, inlineKeyboardInitializer.initInlineKeyboardRespond()));
         return resultMap;
