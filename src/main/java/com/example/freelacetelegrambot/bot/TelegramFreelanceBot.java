@@ -38,6 +38,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final Map<Long, Order> createdOrder = new HashMap<>();
     private final Map<Long, User> cacheUser = new HashMap<>();
     private final Map<Long, Message> createComment = new HashMap<>();
+    private final Map<Long, Message> createMessage = new HashMap<>();
 
     private final ReplyKeyboardInitializer keyboardInitializer;
     private final InlineKeyboardInitializer inlineKeyboardInitializer;
@@ -60,6 +61,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
     private final RejectionCommand rejectionCommand;
     private final ShowCommentCommand showCommentCommand;
     private final CreateCommentCommand createCommentCommand;
+    private final SendMessageExecutorOrCustomer sendMessageExecutorOrCustomer;
 
 
     public TelegramFreelanceBot(@Value("${telegram.bot.token}") String token,
@@ -68,7 +70,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
                                 OrderController orderController, InlineKeyboardInitializer inlineKeyboardInitializer,
                                 RegistrationCommand registrationCommand, SelectExecutorCommand selectExecutorCommand, SearchTaskCommand searchTasksCommand,
                                 ShowOrderOrTaskCommand showOrderOrTaskCommand, UserController userController,
-                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumberCommand editPhoneNumber, OrderDoneCommand orderDoneCommand, RejectionCommand rejectionCommand, ShowCommentCommand showCommentCommand, CreateCommentCommand createCommentCommand) {
+                                SearchExecutorCommand searchExecutorCommand, SettingCommand settingCommand, EditEmailCommand editEmailCommand, EditPhoneNumberCommand editPhoneNumber, OrderDoneCommand orderDoneCommand, RejectionCommand rejectionCommand, ShowCommentCommand showCommentCommand, CreateCommentCommand createCommentCommand, SendMessageExecutorOrCustomer sendMessageExecutorOrCustomer) {
         super(token);
         this.botUserName = botUserName;
         this.keyboardInitializer = keyboardInitializer;
@@ -90,6 +92,7 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
         this.rejectionCommand = rejectionCommand;
         this.showCommentCommand = showCommentCommand;
         this.createCommentCommand = createCommentCommand;
+        this.sendMessageExecutorOrCustomer = sendMessageExecutorOrCustomer;
     }
 
     @Override
@@ -233,6 +236,16 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             createComment.put(chatId, message);
             sendMessage(chatId, "Введите комментарий.\nЧтобы отменить операцию введите: 'отмена'", null);
 
+        } else if (callBackData.equals(InlineKeyButton.SEND_MESSAGE_CUSTOMER.name())) {
+
+            userCommand.put(chatId, InlineKeyButton.SEND_MESSAGE_CUSTOMER.name());
+            createMessage.put(chatId, message);
+            sendMessage(chatId, "Введите сообщение:\nДля отмены операции введите 'отмена'", null);
+
+        } else if (callBackData.equals(InlineKeyButton.SEND_MESSAGE_EXECUTOR.name())) {
+            userCommand.put(chatId, InlineKeyButton.SEND_MESSAGE_EXECUTOR.name());
+            createMessage.put(chatId, message);
+            sendMessage(chatId, "Введите сообщение:\nДля отмены операции введите 'отмена'", null);
         } else
             sendMessage(chatId, "Пока что я не умею это", null);
     }
@@ -313,10 +326,31 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
             } else if (text.equalsIgnoreCase(Commands.MY_COMMENTS.toString())) {
                 showMyComment(chatId);
 
+            } else if(userCommand.containsKey(chatId) &&
+                    userCommand.get(chatId).equals(InlineKeyButton.SEND_MESSAGE_CUSTOMER.name())) {
+
+                sendMessageCustomerOrExecutor(createMessage.get( chatId), text, Role.CUSTOMER);
+
+            } else if(userCommand.containsKey(chatId) &&
+                    userCommand.get(chatId).equals(InlineKeyButton.SEND_MESSAGE_EXECUTOR.name())){
+                sendMessageCustomerOrExecutor(createMessage.get(chatId), text, Role.EXECUTOR);
             } else {
                 sendMessage(chatId, "Пока что я не умею это", null);
             }
         }
+    }
+
+    private void sendMessageCustomerOrExecutor(Message message, String text, Role role) {
+        ReplyKeyboard replyKeyboard;
+        if (role == Role.CUSTOMER) {
+            replyKeyboard = inlineKeyboardInitializer.initInlineKeyboardMessageToExecutor();
+        } else
+            replyKeyboard = inlineKeyboardInitializer.initInlineKeyboardMessageToCustomer();
+        Map<Long, String> response = sendMessageExecutorOrCustomer.execute(message, role, text);
+        for (Map.Entry<Long, String> map : response.entrySet()) {
+            sendMessage(map.getKey(), map.getValue(), replyKeyboard);
+        }
+        userCommand.remove(message.getChatId());
     }
 
     private void createdComment(long chatId, String text, Role role) {
@@ -737,22 +771,26 @@ public class TelegramFreelanceBot extends TelegramLongPollingBot {
 
 
     private void cancel(long chatId) {
-
         userCommand.remove(chatId);
-
         if (userRegistration.containsKey(chatId)) {
             userRegistration.remove(chatId);
             sendMessage(chatId, "Вы отменили регистрацию",
                     keyboardInitializer.initKeyBoardStart());
         }
-        if (createdOrder.containsKey(chatId)) {
+        else if (createdOrder.containsKey(chatId)) {
             createdOrder.get(chatId).getCustomer().setState(State.BASIK);
             createdOrder.remove(chatId);
+            sendMessage(chatId, "Операция отменена", null);
         }
-        if (createComment.containsKey(chatId)) {
+        else if(createComment.containsKey(chatId)) {
             createComment.remove(chatId);
+            sendMessage(chatId, "Операция отменена", null);
         }
-        sendMessage(chatId, "Операция отменена", null);
+        else if (createMessage.containsKey(chatId)) {
+            createMessage.remove(chatId);
+            sendMessage(chatId, "Операция отменена", null);
+        }
+
     }
 
     @Override

@@ -8,10 +8,12 @@ public class MessageHelper {
         String[] strings = message.getText().split("\n");
         String orderId = null;
         for (String str : strings) {
-            if (str.startsWith("Номер задания"))
+            if (str.startsWith("Номер задания")) {
                 orderId = str.split(":")[1].trim().replaceAll("\\.", "");
+                return orderId;
+            }
         }
-        return orderId;
+        return null;
     }
 
     public static String getEmailFromMessage(Message message) {

@@ -2,6 +2,7 @@ package com.example.freelacetelegrambot.command;
 
 
 import com.example.freelacetelegrambot.controller.OrderController;
+import com.example.freelacetelegrambot.exception.OrderInvalidException;
 import com.example.freelacetelegrambot.model.Order;
 import com.example.freelacetelegrambot.model.User;
 import com.example.freelacetelegrambot.util.InlineKeyboardInitializer;
@@ -32,8 +33,8 @@ public class RespondOrderCommand {
         Order order = orderController.findById(orderId);
         long chatIdCustomer = order.getCustomer().getChatId();
 
-//        if (user.getChatId() == chatIdCustomer)
-//            throw new OrderInValidException("Вы не можете отправить отклик самому себе!");
+        if (user.getChatId() == chatIdCustomer)
+            throw new OrderInvalidException("Вы не можете отправить отклик самому себе!");
 
         String responseExecutor = """ 
                         Вы откликнулись. Ждите ответа заказчика.
